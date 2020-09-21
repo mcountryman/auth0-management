@@ -3,18 +3,18 @@ name = "auth0-management"
 version = "0.1.0"
 authors = ["Marvin Countryman <me@maar.vin>"]
 edition = "2018"
-description = "Auth0 Management Client API"
+description = "Auth0 management client API"
 
-readme = "README.md"
+readme = "../README.md"
 license = "MIT"
-license-file = "LICENSE.md"
+license-file = "../LICENSE.md"
 keywords = ["auth0", "reqwest", "management", "api"]
 categories = [
   "api-bindings",
   "asynchronous",
   "authentication"
 ]
-documentation = "https://docs.rs/auth0_management"
+documentation = "https://docs.rs/auth0-management-sys"
 
 [dependencies]
 serde = { version = "1", features = ["derive"] }

@@ -1,2 +1,5 @@
 [workspace]
-members = ["auth0-management"]
+members = [
+  "auth0-management",
+  "auth0-management-codegen"
+]
