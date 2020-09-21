@@ -1,0 +1,22 @@
+[package]
+name = "auth0-management"
+version = "0.1.0"
+authors = ["Marvin Countryman <me@maar.vin>"]
+edition = "2018"
+description = "Auth0 Management Client API"
+
+readme = "README.md"
+license = "MIT"
+license-file = "LICENSE.md"
+keywords = ["auth0", "reqwest", "management", "api"]
+categories = [
+  "api-bindings",
+  "asynchronous",
+  "authentication"
+]
+documentation = "https://docs.rs/auth0_management"
+
+
+[dependencies]
+
+reqwest = { version = "0.10", features = ["json"] }
