@@ -47,7 +47,7 @@ pub struct ApiOperation {
   pub summary: String,
   pub nickname: String,
   pub parameters: Vec<ApiOperationParameter>,
-  pub items: Option<Item>,
+  pub items: Option<Items>,
   #[serde(alias = "responseMessages")]
   pub messages: Option<Vec<ApiOperationMessage>>,
 }
@@ -78,16 +78,6 @@ pub enum ApiOperationMessageCode {
 }
 
 #[derive(Deserialize, Debug)]
-pub struct Item {
-  #[serde(rename = "type")]
-  pub kind: Option<String>,
-  #[serde(rename = "minLength")]
-  pub min_length: Option<i32>,
-  #[serde(rename = "maxLength")]
-  pub max_length: Option<i32>,
-}
-
-#[derive(Deserialize, Debug)]
 pub struct Model {
   #[serde(rename = "type")]
   pub kind: Option<String>,
@@ -100,14 +90,20 @@ pub struct ModelProperty {
   pub reference: Option<String>,
   #[serde(rename = "type")]
   pub kind: Option<String>,
-  pub items: Option<ModelPropertyItem>,
+  pub items: Option<Items>,
   pub format: Option<String>,
   pub description: Option<String>,
 }
 
 #[derive(Deserialize, Debug)]
-pub struct ModelPropertyItem {
+pub struct Items {
+  #[serde(rename = "$ref")]
+  pub reference: Option<String>,
   #[serde(rename = "type")]
   pub kind: Option<String>,
+  #[serde(rename = "minLength")]
+  pub min_length: Option<i32>,
+  #[serde(rename = "maxLength")]
+  pub max_length: Option<i32>,
   pub properties: Option<HashMap<String, ModelProperty>>,
 }
