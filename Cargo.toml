@@ -1,2 +1,2 @@
 [workspace]
-members = ["auth0_management"]
+members = ["auth0-management"]

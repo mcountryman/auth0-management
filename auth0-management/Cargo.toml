@@ -16,7 +16,7 @@ categories = [
 ]
 documentation = "https://docs.rs/auth0_management"
 
-
 [dependencies]
-
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
 reqwest = { version = "0.10", features = ["json"] }
