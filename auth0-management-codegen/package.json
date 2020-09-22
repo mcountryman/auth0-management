@@ -1,0 +1,12 @@
+{
+  "name": "auth0-management-codegen",
+  "main": "src/index.js",
+  "version": "0.1.0",
+  "scripts": {
+    "start": "node ."
+  },
+  "dependencies": {
+    "api-spec-converter": "^2.11.2",
+    "swagger-parser": "^10.0.2"
+  }
+}

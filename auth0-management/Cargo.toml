@@ -7,7 +7,6 @@ description = "Auth0 management client API"
 
 readme = "../README.md"
 license = "MIT"
-license-file = "../LICENSE.md"
 keywords = ["auth0", "reqwest", "management", "api"]
 categories = [
   "api-bindings",
