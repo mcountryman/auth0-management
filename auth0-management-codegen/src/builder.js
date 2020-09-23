@@ -1,161 +1,117 @@
+const Builder = require("./codegen");
+const {toSnake, toPascal} = require("./utils");
 
-class BaseBuilder {
-  constructor(name, parent) {
-    this._vis = "";
-    this._docs = "";
-    this._name = name;
-    this.parent = parent;
+const OPERATION_NAME_PATCHES = [
+  [/^get(.*)/, "get$1"]
+]
+
+const TYPES = {
+  "string": "String",
+  "integer": "i32",
+  "boolean": "bool",
+}
+
+class Context {
+  constructor() {
+    this.scopes = {};
   }
 
-  vis(value) {
-    this._vis = value;
-    return this;
+  scope(tags) {
+    const name = toSnake(tags[0]);
+    return this.scopes[name] = this.scopes[name] || new Builder(name);
   }
+}
 
-  docs(value) {
-    this._docs = value;
-    return this;
-  }
+function build(api) {
+  const ctx = new Context();
 
-  import(path, name) {
-    if (this.parent) {
-      this.parent.import(path, name);
+  Object
+    .keys(api.paths)
+    .forEach(x => buildOperations(ctx, api.paths[x]))
+
+  return ctx;
+}
+
+function buildOperations(ctx, operations) {
+  const get = operations.get;
+  if (get) {
+    if (get.parameters && get.parameters.length > 1 && get.parameters[0].in === "query") {
+      buildFindOperation(ctx, get);
     } else {
-      throw new Error(`Couldn't import '${path}::${name}'`);
+      buildGetOperation(ctx, get);
+    }
+  }
+}
+
+function buildGetOperation(ctx, operation) {
+  const scope = ctx.scope(operation.tags);
+  const name = getOpName(operation.operationId);
+  const fn = scope
+    .fn(name)
+    .docs(getOpDocs(operation));
+
+  if (operation.parameters) {
+    for (const param of operation.parameters) {
+      fn.param(param.name + ": i32");
+    }
+  }
+}
+
+function buildFindOperation(ctx, operation) {
+  const scope = ctx.scope(operation.tags);
+  const optsName = `Find${operation.operationId.substring(3)}`;
+  const opts = scope
+    .struct(optsName)
+    .vis("pub");
+
+  for (const param of operation.parameters) {
+    if (param.in !== "query")
+      throw new Error(`Invalid param type in operation ${operation.operationId}`);
+
+    opts
+      .field(param.name)
+      .type(param.schema.type)
+      .doc(param.description)
+  }
+
+  getOpFn(ctx, operation)
+    .param(`opts: ${optsName}`);
+}
+
+function getOpFn(ctx, operation) {
+  const scope = ctx.scope(operation.tags);
+  const name = getOpName(operation.operationId);
+
+  return scope
+    .fn(name)
+    .vis("pub")
+    .docs(getOpDocs(operation));
+}
+
+function getOpName(name) {
+  return toSnake(
+    OPERATION_NAME_PATCHES
+      .reduce(
+        (result, match) => result.replace(match[0], match[1]),
+        name
+      )
+  )
+}
+
+function getOpDocs(operation) {
+  const docs = operation.description
+    ? operation.description.split("\n")
+    : [];
+
+  if (operation.parameters) {
+    docs.push("# Arguments");
+
+    for (const param of operation.parameters) {
+      docs.push(` * \`${param.name}\` - ${param.description}`);
     }
   }
 
-  build() {
-    return this.parent;
-  }
-
-  toString() {
-    return "///" + this._docs.split("\n").join("///\n");
-  }
-
-  _toStringFromLines(lines) {
-    return lines
-      .filter(line => line && line.length > 0)
-      .join("\n");
-  }
+  return docs;
 }
 
-class ModuleBuilder extends BaseBuilder {
-  constructor(name) {
-    super(name);
-
-    this._structs = [];
-    this._imports = {};
-  }
-
-  import(path, name) {
-    if (this._imports[path]) {
-      this._imports[path].push(name);
-    } else {
-      this._imports[path] = [name];
-    }
-  }
-
-  struct(name) {
-    const struct = new StructBuilder(name, this);
-    this._structs.push(struct);
-    return struct;
-  }
-
-  toString() {
-    return this._toStringFromLines([
-      super.toString(),
-      `${this._vis} mod ${this._name} {`,
-      // Object
-      //   .keys(this._imports)
-      //   .map(path => `  use ${path}::\{${this._imports[path].join(", ")}\};`)
-      this._structs.map(struct => struct.toString()),
-      `}`
-    ].flat());
-  }
-}
-
-class StructBuilder extends BaseBuilder {
-  constructor(name, parent) {
-    super(name, parent);
-    this.fields = [];
-  }
-
-  field(name) {
-    const field = new FieldBuilder(name, this);
-    this.fields.push(field);
-    return field;
-  }
-
-  toString() {
-    return super._toStringFromLines([
-      super.toString(),
-      `${this._vis} struct ${this._name} {`,
-      this.fields.map(field => field.toString()),
-      `}`,
-    ].flat())
-  }
-}
-
-class FnBuilder extends BaseBuilder {
-  constructor(name, parent) {
-    super(name);
-
-    this._name = name;
-    this._lines = [];
-    this._params = [];
-
-    this.parent = parent;
-  }
-
-  line(value) {
-    this._lines.push(value);
-    return this;
-  }
-
-  param(value) {
-    this._params.push(value);
-    return this;
-  }
-
-  toString() {
-    return super._toStringFromLines([
-      super.toString(),
-      this._attr,
-      `  ${this._vis} fn ${this._name}(${this._params.join(", ")}) -> ${this._type} {`,
-      this._lines,
-      `}`,
-    ].flat())
-  }
-}
-
-class FieldBuilder extends BaseBuilder {
-  constructor(name, parent) {
-    super(name);
-
-    this._attr = "";
-    this._type = "i32";
-    this.parent = parent;
-  }
-
-  attr(value) {
-    this._attr = value;
-    return this;
-  }
-
-  type(value) {
-    this._type = value;
-    return this;
-  }
-
-  toString() {
-    return super._toStringFromLines([
-      super.toString(),
-      this._attr,
-      `  ${this._vis} ${this._name}: ${this._type},`
-    ])
-  }
-}
-
-
-module.exports = ModuleBuilder;
+module.exports = build;
