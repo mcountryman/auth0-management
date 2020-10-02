@@ -1,4 +1,25 @@
-[workspace]
-members = [
-  "auth0-management"
+[package]
+name = "auth0-management"
+version = "0.1.0"
+authors = ["Marvin Countryman <me@maar.vin>"]
+edition = "2018"
+description = "Auth0 management client API"
+
+readme = "../README.md"
+license = "MIT"
+keywords = ["auth0", "reqwest", "management", "api"]
+categories = [
+  "api-bindings",
+  "asynchronous",
+  "authentication"
 ]
+documentation = "https://docs.rs/auth0-management-sys"
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+reqwest = { version = "0.10", features = ["json"] }
+
+[dev-dependencies]
+tokio = { version = "0.2.22", features = ["macros"] }
+mockall = "0.8.1"
