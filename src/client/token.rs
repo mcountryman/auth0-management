@@ -2,7 +2,7 @@
 //! # Examples
 //! ```
 //! use std::error::Error;
-//! use auth0_management::token::ClientTokenManager;
+//! use auth0_management::client::token::ClientTokenManager;
 //!
 //! async fn get_token() -> Result<String, Box<dyn Error>> {
 //!   let mut token_manager = ClientTokenManager::build()
@@ -177,7 +177,7 @@ impl Error for ClientTokenManagerBuilderError {}
 
 #[cfg(test)]
 mod tests {
-  use crate::token::{ClientToken, ClientTokenManager, ClientTokenManagerBuilderError};
+  use crate::client::token::{ClientToken, ClientTokenManager, ClientTokenManagerBuilderError};
   use std::env::var;
   use std::time::SystemTime;
   use tokio::time::Duration;
