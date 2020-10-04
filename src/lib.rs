@@ -1,2 +1,10 @@
+use crate::client::Client;
+
+pub mod api;
 pub mod client;
-mod models;
+pub mod rate;
+pub mod token;
+
+pub struct ManagementClient {
+  client: Client,
+}
