@@ -1,51 +1,7 @@
-use std::env::var;
 use std::time::{Duration, SystemTime};
 
-use auth0_management::token::{Token, TokenManager, TokenManagerError};
-
-/// Tests ClientTokenManagerBuilder and all the errors that can occur when parameters are not
-/// supplied.
-#[test]
-fn test_build_manager() {
-  get_working_client();
-
-  assert!(TokenManager::new().build().is_err());
-
-  assert_eq!(
-    TokenManager::new()
-      .domain(&var("AUTH0_DOMAIN").unwrap())
-      .audience(&var("AUTH0_AUDIENCE").unwrap())
-      .client_id(&var("AUTH0_CLIENT_ID").unwrap())
-      .build()
-      .err()
-      .unwrap(),
-    TokenManagerError::MissingClientSecret
-  );
-
-  assert_eq!(
-    TokenManager::new()
-      .domain(&var("AUTH0_DOMAIN").unwrap())
-      .audience(&var("AUTH0_AUDIENCE").unwrap())
-      .build()
-      .err()
-      .unwrap(),
-    TokenManagerError::MissingClientID
-  );
-
-  assert_eq!(
-    TokenManager::new()
-      .domain(&var("AUTH0_DOMAIN").unwrap())
-      .build()
-      .err()
-      .unwrap(),
-    TokenManagerError::MissingAudience
-  );
-
-  assert_eq!(
-    TokenManager::new().build().err().unwrap(),
-    TokenManagerError::MissingDomain
-  );
-}
+use auth0_management::token::{Token, TokenManager};
+use reqwest::Client;
 
 /// Basic fetch token test.
 #[tokio::test]
@@ -86,11 +42,11 @@ async fn test_update_token() {
 }
 
 fn get_working_client() -> TokenManager {
-  TokenManager::new()
-    .domain(&var("AUTH0_DOMAIN").unwrap())
-    .audience(&var("AUTH0_AUDIENCE").unwrap())
-    .client_id(&var("AUTH0_CLIENT_ID").unwrap())
-    .client_secret(&var("AUTH0_CLIENT_SECRET").unwrap())
-    .build()
-    .unwrap()
+  TokenManager::new(
+    Client::new(),
+    &env!("AUTH0_DOMAIN"),
+    &env!("AUTH0_AUDIENCE"),
+    &env!("AUTH0_CLIENT_ID"),
+    &env!("AUTH0_CLIENT_SECRET"),
+  )
 }

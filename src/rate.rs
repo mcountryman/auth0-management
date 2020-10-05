@@ -69,13 +69,13 @@ impl RateLimit {
     let headers = res.headers();
 
     self.limit = headers
-      .get("x-rate-limit")
+      .get("x-ratelimit-limit")
       .ok_or(RateLimitError::MissingRateLimitHeader)?
       .to_str()?
       .parse()?;
 
     self.remaining = headers
-      .get("x-rate-remaining")
+      .get("x-ratelimit-remaining")
       .ok_or(RateLimitError::MissingRateRemainingHeader)?
       .to_str()?
       .parse()?;
@@ -83,7 +83,7 @@ impl RateLimit {
     self.reset = SystemTime::UNIX_EPOCH
       + Duration::from_secs(
         headers
-          .get("x-rate-reset")
+          .get("x-ratelimit-reset")
           .ok_or(RateLimitError::MissingRateResetHeader)?
           .to_str()?
           .parse::<u64>()?,
@@ -107,6 +107,12 @@ impl RateLimitResponse for Response {
   ) -> Result<Self, Box<dyn Error + Send + Sync>> {
     rate_limit.read(&self)?;
     Ok(self)
+  }
+}
+
+impl Default for RateLimit {
+  fn default() -> Self {
+    RateLimit::new()
   }
 }
 
