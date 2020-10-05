@@ -21,7 +21,7 @@
 use std::error::Error;
 use std::time::{SystemTime, SystemTimeError};
 
-use reqwest::Client;
+use reqwest::{Client, StatusCode};
 use serde::export::Formatter;
 use serde::{Deserialize, Serialize};
 
@@ -39,6 +39,7 @@ pub struct Token {
 #[derive(Debug)]
 pub enum TokenError {
   ReqwestErr(reqwest::Error),
+  AccessDenied(String),
   SystemTimeErr(SystemTimeError),
 }
 
@@ -48,6 +49,12 @@ struct TokenOpts {
   grant_type: String,
   client_id: String,
   client_secret: String,
+}
+
+#[derive(Deserialize, Clone, Debug)]
+struct TokenErrorResponse {
+  error: String,
+  error_description: String,
 }
 
 /// Provides oauth token retrieval and expiration checks.
@@ -86,14 +93,14 @@ impl TokenManager {
   /// Gets valid encoded JWT token.
   pub async fn get_token(&mut self) -> Result<String, TokenError> {
     match &self.token {
-      None => Ok(self.fetch_token().await.map_err(TokenError::ReqwestErr)?),
+      None => Ok(self.fetch_token().await?),
       Some(token) => {
         let elapsed = SystemTime::now()
           .duration_since(self.token_last)
           .map_err(TokenError::SystemTimeErr)?;
 
         if elapsed.as_secs() > token.expires_in {
-          Ok(self.fetch_token().await.map_err(TokenError::ReqwestErr)?)
+          Ok(self.fetch_token().await?)
         } else {
           Ok(self.token.as_ref().unwrap().access_token.to_owned())
         }
@@ -102,15 +109,19 @@ impl TokenManager {
   }
 
   /// Gets new encoded JWT token from auth0.
-  async fn fetch_token(&mut self) -> Result<String, reqwest::Error> {
-    let token = self
+  async fn fetch_token(&mut self) -> Result<String, TokenError> {
+    let res = self
       .client
       .post(&format!("https://{}/oauth/token", self.domain))
       .form(&self.token_opts)
       .send()
-      .await?
-      .json()
       .await?;
+
+    if res.status() != StatusCode::OK {
+      return Err(res.json::<TokenErrorResponse>().await?.into());
+    }
+
+    let token = res.json().await?;
 
     self.token = Some(token);
     self.token_last = SystemTime::now();
@@ -122,6 +133,18 @@ impl TokenManager {
 impl std::fmt::Display for TokenError {
   fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
     write!(f, "{:?}", self)
+  }
+}
+
+impl From<TokenErrorResponse> for TokenError {
+  fn from(res: TokenErrorResponse) -> TokenError {
+    TokenError::AccessDenied(res.error_description)
+  }
+}
+
+impl From<reqwest::Error> for TokenError {
+  fn from(err: reqwest::Error) -> TokenError {
+    TokenError::ReqwestErr(err)
   }
 }
 

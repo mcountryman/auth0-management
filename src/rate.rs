@@ -19,8 +19,10 @@
 //! }
 //! ```
 use std::error::Error;
+use std::num::ParseIntError;
 use std::time::{Duration, SystemTime};
 
+use reqwest::header::ToStrError;
 use reqwest::Response;
 use serde::export::fmt::Display;
 use serde::export::Formatter;
@@ -30,13 +32,6 @@ pub struct RateLimit {
   pub limit: u32,
   pub reset: SystemTime,
   pub remaining: u32,
-}
-
-#[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
-pub enum RateLimitError {
-  MissingRateLimitHeader,
-  MissingRateResetHeader,
-  MissingRateRemainingHeader,
 }
 
 impl RateLimit {
@@ -65,7 +60,7 @@ impl RateLimit {
   }
 
   /// Read response headers and updates limits.
-  pub fn read(&mut self, res: &Response) -> Result<(), Box<dyn Error + Send + Sync>> {
+  pub fn read(&mut self, res: &Response) -> Result<(), RateLimitError> {
     let headers = res.headers();
 
     self.limit = headers
@@ -113,6 +108,28 @@ impl RateLimitResponse for Response {
 impl Default for RateLimit {
   fn default() -> Self {
     RateLimit::new()
+  }
+}
+
+#[derive(Debug)]
+pub enum RateLimitError {
+  MissingRateLimitHeader,
+  MissingRateResetHeader,
+  MissingRateRemainingHeader,
+
+  BadHeaderEncoding(ToStrError),
+  BadHeaderFormat(ParseIntError),
+}
+
+impl From<ToStrError> for RateLimitError {
+  fn from(err: ToStrError) -> Self {
+    RateLimitError::BadHeaderEncoding(err)
+  }
+}
+
+impl From<ParseIntError> for RateLimitError {
+  fn from(err: ParseIntError) -> Self {
+    RateLimitError::BadHeaderFormat(err)
   }
 }
 

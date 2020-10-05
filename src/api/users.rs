@@ -6,7 +6,6 @@ use serde::{Deserialize, Serialize};
 
 use crate::{ClientRequestBuilder, ManagementClient};
 use chrono::{DateTime, Utc};
-use std::time::{SystemTime, SystemTimeError};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Identity {

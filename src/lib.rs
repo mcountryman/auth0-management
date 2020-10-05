@@ -1,24 +1,16 @@
 use std::error::Error;
 
 use async_trait::async_trait;
-use reqwest::{Client, Method, RequestBuilder, Url};
-use serde::de::DeserializeOwned;
+use reqwest::{Client, Method, RequestBuilder, Response, StatusCode, Url};
+use serde::{de::DeserializeOwned, Deserialize};
 
-use crate::rate::RateLimit;
-use crate::token::TokenManager;
+use crate::rate::{RateLimit, RateLimitError};
+use crate::token::{TokenError, TokenManager};
 use std::fmt::{Display, Formatter};
 
 pub mod api;
 pub mod rate;
 pub mod token;
-
-#[derive(Debug, PartialOrd, PartialEq)]
-pub enum BuilderError {
-  MissingDomain,
-  MissingAudience,
-  MissingClientID,
-  MissingClientSecret,
-}
 
 pub struct ManagementClient {
   rate: RateLimit,
@@ -38,12 +30,12 @@ impl ManagementClient {
     self.request(Method::GET, path)
   }
 
-  pub(crate) fn put(
-    &mut self,
-    path: &str,
-  ) -> Result<RequestBuilder, Box<dyn Error + Send + Sync>> {
-    self.request(Method::PUT, path)
-  }
+  // pub(crate) fn put(
+  //   &mut self,
+  //   path: &str,
+  // ) -> Result<RequestBuilder, Box<dyn Error + Send + Sync>> {
+  //   self.request(Method::PUT, path)
+  // }
 
   pub(crate) fn patch(
     &mut self,
@@ -52,12 +44,12 @@ impl ManagementClient {
     self.request(Method::PATCH, path)
   }
 
-  pub(crate) fn post(
-    &mut self,
-    path: &str,
-  ) -> Result<RequestBuilder, Box<dyn Error + Send + Sync>> {
-    self.request(Method::POST, path)
-  }
+  // pub(crate) fn post(
+  //   &mut self,
+  //   path: &str,
+  // ) -> Result<RequestBuilder, Box<dyn Error + Send + Sync>> {
+  //   self.request(Method::POST, path)
+  // }
 
   pub(crate) fn delete(
     &mut self,
@@ -80,31 +72,29 @@ impl ManagementClient {
   pub(crate) async fn send(
     &mut self,
     req: RequestBuilder,
-  ) -> Result<(), Box<dyn Error + Send + Sync>> {
+  ) -> Result<Response, ManagementClientError> {
     let token = self.token.get_token().await?;
     let res = req
       .header("Authorization", format!("Bearer {}", token))
       .send()
       .await?;
 
+    if res.status() != StatusCode::OK {
+      return Err(ManagementClientError::from(
+        res.json::<ErrorResponse>().await?,
+      ));
+    }
+
     self.rate.read(&res)?;
 
-    Ok(())
+    Ok(res)
   }
 
   pub(crate) async fn json<T: DeserializeOwned>(
     &mut self,
     req: RequestBuilder,
   ) -> Result<T, Box<dyn Error + Send + Sync>> {
-    let token = self.token.get_token().await?;
-    let res = req
-      .header("Authorization", format!("Bearer {}", token))
-      .send()
-      .await?;
-
-    self.rate.read(&res)?;
-
-    Ok(res.json::<T>().await?)
+    Ok(self.send(req).await?.json::<T>().await?)
   }
 }
 
@@ -192,7 +182,8 @@ impl ClientRequestBuilder for RequestBuilder {
     self,
     client: &mut ManagementClient,
   ) -> Result<(), Box<dyn Error + Send + Sync>> {
-    client.send(self).await
+    client.send(self).await?;
+    Ok(())
   }
 
   async fn send_json<T: DeserializeOwned>(
@@ -209,4 +200,66 @@ impl Display for BuilderError {
   }
 }
 
+#[derive(Debug, PartialOrd, PartialEq)]
+pub enum BuilderError {
+  MissingDomain,
+  MissingAudience,
+  MissingClientID,
+  MissingClientSecret,
+}
+
 impl Error for BuilderError {}
+
+#[derive(Debug)]
+pub enum ManagementClientError {
+  Auth0(ErrorResponse),
+  Auth0Token(TokenError),
+  Transport(reqwest::Error),
+  MalformedResponse(RateLimitError),
+}
+
+impl Display for ManagementClientError {
+  fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+    match self {
+      ManagementClientError::Auth0(inner) => write!(f, "{}", inner.message),
+      _ => write!(f, "{}", self),
+    }
+  }
+}
+
+impl Error for ManagementClientError {}
+
+#[derive(Clone, Debug, PartialOrd, PartialEq, Deserialize)]
+pub struct ErrorResponse {
+  message: String,
+}
+
+impl Display for ErrorResponse {
+  fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+    write!(f, "{}", self.message)
+  }
+}
+
+impl From<TokenError> for ManagementClientError {
+  fn from(err: TokenError) -> Self {
+    ManagementClientError::Auth0Token(err)
+  }
+}
+
+impl From<ErrorResponse> for ManagementClientError {
+  fn from(res: ErrorResponse) -> Self {
+    ManagementClientError::Auth0(res)
+  }
+}
+
+impl From<reqwest::Error> for ManagementClientError {
+  fn from(err: reqwest::Error) -> Self {
+    ManagementClientError::Transport(err)
+  }
+}
+
+impl From<RateLimitError> for ManagementClientError {
+  fn from(err: RateLimitError) -> Self {
+    ManagementClientError::MalformedResponse(err)
+  }
+}
