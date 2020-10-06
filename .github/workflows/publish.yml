@@ -1,4 +1,10 @@
-on: [ push, pull_request ]
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
 
 name: auth-management publish
 
@@ -19,13 +25,17 @@ jobs:
       - run: rustup component add rustfmt
       - run: rustup component add clippy
 
-      - name: publish
-        run: cargo release --skip-push patch
-
-      - name: configure git
+      - name: configure git / crates.io login
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
+          cargo login "$CRATES_TOKEN"
+        env:
+          CRATES_TOKEN: ${{ secrets.CRATES_TOKEN }}
+
+
+      - name: publish
+        run: cargo release --no-confirm --skip-push patch
 
       - name: publish git tag
         uses: ad-m/github-push-action@master

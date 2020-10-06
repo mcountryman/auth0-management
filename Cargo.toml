@@ -1,6 +1,6 @@
 [package]
 name = "auth0-management"
-version = "0.1.1"
+version = "0.0.0"
 authors = ["Marvin Countryman <me@maar.vin>"]
 edition = "2018"
 description = "Auth0 management client API"
