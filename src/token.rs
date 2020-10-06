@@ -1,23 +1,3 @@
-//! Handles management OAuth token retrieval, caching, and refreshing.
-//! # Examples
-//! ```
-//! use std::error::Error;
-//! use auth0_management::token::TokenManager;
-//! use reqwest::Client;
-//!
-//! async fn get_token() -> Result<String, Box<dyn Error>> {
-//!   let mut token_manager = TokenManager::new(
-//!     Client::new(),
-//!     "MY_DOMAIN.eu.auth0.com",
-//!     "https://MY_AUDIENCE",
-//!     "MY_CLIENT_ID",
-//!     "MY_CLIENT_SECRET",
-//!   );
-//!
-//!   // Encoded JWT token that can be directly sent to Auth0 API via `Authorization` header.
-//!   Ok(token_manager.get_token().await?)
-//! }
-//! ```
 use std::error::Error;
 use std::time::{SystemTime, SystemTimeError};
 
@@ -38,9 +18,9 @@ pub struct Token {
 
 #[derive(Debug)]
 pub enum TokenError {
-  ReqwestErr(reqwest::Error),
+  Time(SystemTimeError),
+  Transport(reqwest::Error),
   AccessDenied(String),
-  SystemTimeErr(SystemTimeError),
 }
 
 #[derive(Serialize, Clone, Debug)]
@@ -97,7 +77,7 @@ impl TokenManager {
       Some(token) => {
         let elapsed = SystemTime::now()
           .duration_since(self.token_last)
-          .map_err(TokenError::SystemTimeErr)?;
+          .map_err(TokenError::Time)?;
 
         if elapsed.as_secs() > token.expires_in {
           Ok(self.fetch_token().await?)
@@ -144,7 +124,7 @@ impl From<TokenErrorResponse> for TokenError {
 
 impl From<reqwest::Error> for TokenError {
   fn from(err: reqwest::Error) -> TokenError {
-    TokenError::ReqwestErr(err)
+    TokenError::Transport(err)
   }
 }
 

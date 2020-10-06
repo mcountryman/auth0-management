@@ -10,7 +10,9 @@ use serde::export::fmt::Debug;
 use std::fmt::{Display, Formatter};
 
 pub mod api;
+#[doc(hidden)]
 pub mod rate;
+#[doc(hidden)]
 pub mod token;
 
 pub struct ManagementClient {
@@ -111,14 +113,20 @@ impl ManagementClientBuilder {
     Default::default()
   }
 
-  pub fn build(self) -> Result<ManagementClient, BuilderError> {
+  pub fn build(self) -> Result<ManagementClient, ManagementClientBuilderError> {
     let client = Client::new();
-    let domain = self.domain.ok_or(BuilderError::MissingDomain)?;
-    let audience = self.audience.ok_or(BuilderError::MissingAudience)?;
-    let client_id = self.client_id.ok_or(BuilderError::MissingClientID)?;
+    let domain = self
+      .domain
+      .ok_or(ManagementClientBuilderError::MissingDomain)?;
+    let audience = self
+      .audience
+      .ok_or(ManagementClientBuilderError::MissingAudience)?;
+    let client_id = self
+      .client_id
+      .ok_or(ManagementClientBuilderError::MissingClientID)?;
     let client_secret = self
       .client_secret
-      .ok_or(BuilderError::MissingClientSecret)?;
+      .ok_or(ManagementClientBuilderError::MissingClientSecret)?;
 
     Ok(ManagementClient {
       rate: RateLimit::new(),
@@ -165,6 +173,7 @@ impl Default for ManagementClientBuilder {
   }
 }
 
+#[doc(hidden)]
 #[async_trait]
 pub trait ClientRequestBuilder {
   async fn send_pass(
@@ -195,21 +204,21 @@ impl ClientRequestBuilder for RequestBuilder {
   }
 }
 
-impl Display for BuilderError {
+impl Display for ManagementClientBuilderError {
   fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
     write!(f, "{:?}", self)
   }
 }
 
 #[derive(Debug, PartialOrd, PartialEq)]
-pub enum BuilderError {
+pub enum ManagementClientBuilderError {
   MissingDomain,
   MissingAudience,
   MissingClientID,
   MissingClientSecret,
 }
 
-impl Error for BuilderError {}
+impl Error for ManagementClientBuilderError {}
 
 #[derive(Debug)]
 pub enum ManagementClientError {
