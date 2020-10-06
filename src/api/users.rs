@@ -89,26 +89,6 @@ pub struct UserCreateOpts<AppMeta = (), UserMeta = ()> {
   user_metadata: Option<UserMeta>,
 }
 
-#[derive(Serialize, Deserialize)]
-pub struct UserUpdateOpts<AppMeta, UserMeta> {
-  pub user_id: String,
-  pub blocked: Option<bool>,
-  pub email: Option<String>,
-  pub email_verified: Option<bool>,
-  pub phone_number: Option<String>,
-  pub phone_verified: Option<bool>,
-  pub given_name: Option<String>,
-  pub family_name: Option<String>,
-  pub name: Option<String>,
-  pub nickname: Option<String>,
-  pub picture: Option<String>,
-  pub verify_email: Option<bool>,
-  pub verify_phone_number: Option<bool>,
-
-  pub app_metadata: Option<AppMeta>,
-  pub user_metadata: Option<UserMeta>,
-}
-
 #[async_trait]
 pub trait UsersManager {
   async fn get_user<AppMeta: DeserializeOwned, UserMeta: DeserializeOwned>(
@@ -200,25 +180,7 @@ impl UsersManager for ManagementClient {
 
 impl<AppMeta, UserMeta> UserCreateOpts<AppMeta, UserMeta> {
   pub fn new() -> Self {
-    Self {
-      email: None,
-      phone_number: None,
-      blocked: None,
-      email_verified: None,
-      phone_verified: None,
-      given_name: None,
-      family_name: None,
-      name: None,
-      nickname: None,
-      picture: None,
-      user_id: None,
-      connection: None,
-      password: None,
-      verify_email: None,
-      username: None,
-      app_metadata: None,
-      user_metadata: None,
-    }
+    Default::default()
   }
 
   pub fn email(mut self, email: &str) -> Self {
@@ -293,13 +255,33 @@ impl<AppMeta, UserMeta> UserCreateOpts<AppMeta, UserMeta> {
   }
 }
 
+impl<AppMeta, UserMeta> Default for UserCreateOpts<AppMeta, UserMeta> {
+  fn default() -> Self {
+    Self {
+      email: None,
+      phone_number: None,
+      blocked: None,
+      email_verified: None,
+      phone_verified: None,
+      given_name: None,
+      family_name: None,
+      name: None,
+      nickname: None,
+      picture: None,
+      user_id: None,
+      connection: None,
+      password: None,
+      verify_email: None,
+      username: None,
+      app_metadata: None,
+      user_metadata: None,
+    }
+  }
+}
+
 impl UsersFindOpts {
   pub fn new() -> Self {
-    Self {
-      page: None,
-      page_size: None,
-      include_totals: None,
-    }
+    Default::default()
   }
 
   pub fn page(mut self, page: u32) -> Self {
@@ -341,3 +323,66 @@ impl UsersFindOpts {
 //     }
 //   }
 // }
+
+impl Default for UsersFindOpts {
+  fn default() -> Self {
+    Self {
+      page: None,
+      page_size: None,
+      include_totals: None,
+    }
+  }
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct UserUpdateOpts<AppMeta, UserMeta> {
+  #[serde(skip_serializing)]
+  pub user_id: String,
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub blocked: Option<bool>,
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub email: Option<String>,
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub phone_number: Option<String>,
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub given_name: Option<String>,
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub family_name: Option<String>,
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub name: Option<String>,
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub nickname: Option<String>,
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub picture: Option<String>,
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub verify_email: Option<bool>,
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub verify_phone_number: Option<bool>,
+
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub app_metadata: Option<AppMeta>,
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub user_metadata: Option<UserMeta>,
+}
+
+impl<AppMetadata, UserMetadata> Into<UserUpdateOpts<AppMetadata, UserMetadata>>
+  for User<AppMetadata, UserMetadata>
+{
+  fn into(self) -> UserUpdateOpts<AppMetadata, UserMetadata> {
+    UserUpdateOpts {
+      user_id: self.user_id,
+      blocked: Some(self.blocked),
+      email: Some(self.email),
+      phone_number: self.phone_number,
+      given_name: self.given_name,
+      family_name: self.family_name,
+      name: Some(self.name),
+      nickname: Some(self.nickname),
+      picture: Some(self.picture),
+      verify_email: None,
+      verify_phone_number: None,
+      app_metadata: None,
+      user_metadata: None,
+    }
+  }
+}

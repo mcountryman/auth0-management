@@ -1,7 +1,7 @@
 use std::error::Error;
 
 use async_trait::async_trait;
-use reqwest::{Client, Method, RequestBuilder, Response, StatusCode, Url};
+use reqwest::{Client, Method, RequestBuilder, Response, Url};
 use serde::{de::DeserializeOwned, Deserialize};
 
 use crate::rate::{RateLimit, RateLimitError};
