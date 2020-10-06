@@ -1,6 +1,6 @@
 on: [ push, pull_request ]
 
-name: auth-management test
+name: test
 
 jobs:
   lint:
@@ -31,15 +31,9 @@ jobs:
           command: clippy
           args: --all-features -- -D warnings
 
-  test:
-    name: test
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os:
-          - ubuntu-latest
-          - macOS-latest
-          - windows-latest
+  unit:
+    name: unit
+    runs-on: ubuntu-20.04
 
     steps:
       - uses: actions/checkout@v2
