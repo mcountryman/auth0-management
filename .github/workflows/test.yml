@@ -1,6 +1,6 @@
 on: [ push, pull_request ]
 
-name: auth-management
+name: auth-management test
 
 jobs:
   lint:

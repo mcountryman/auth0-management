@@ -1,0 +1,33 @@
+on: [ push, pull_request ]
+
+name: auth-management publish
+
+jobs:
+  publish:
+    name: publish
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      # this is cheaper than requesting the non-minimal profile
+      - run: rustup component add rustfmt
+      - run: rustup component add clippy
+
+      - name: publish
+        run: cargo release --skip-push patch
+
+      - name: configure git
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+
+      - name: publish git tag
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
