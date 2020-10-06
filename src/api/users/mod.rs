@@ -123,6 +123,9 @@ pub trait UsersManager {
 
 #[async_trait]
 impl UsersManager for ManagementClient {
+  /// Retrieve user details.
+  /// # Arguments
+  /// * `id` - The id of the user.
   async fn get_user<AppMeta: DeserializeOwned, UserMeta: DeserializeOwned>(
     &mut self,
     id: &str,
@@ -299,30 +302,6 @@ impl UsersFindOpts {
     self
   }
 }
-// impl<AppMeta: Serialize, UserMeta: Serialize> Into<UserUpdateOpts<AppMeta, UserMeta>>
-//   for User<AppMeta, UserMeta>
-// {
-//   fn into(self) -> UserUpdateOpts<AppMeta, UserMeta> {
-//     UserUpdateOpts {
-//       user_id: self.user_id,
-//       blocked: None,
-//       email: Some(self.email),
-//       email_verified: Some(self.email_verified),
-//       phone_number: self.phone_number,
-//       phone_verified: Some(self.phone_verified),
-//       given_name: Some(self.given_name),
-//       family_name: Some(self.family_name),
-//       name: Some(self.name),
-//       nickname: Some(self.nickname),
-//       picture: Some(self.picture),
-//       verify_email: None,
-//       verify_phone_number: None,
-//
-//       app_metadata: Some(self.app_metadata),
-//       user_metadata: Some(self.user_metadata),
-//     }
-//   }
-// }
 
 impl Default for UsersFindOpts {
   fn default() -> Self {

@@ -1,3 +1,7 @@
+#![warn(missing_docs)]
+//!
+//!
+//!
 use std::error::Error;
 
 use async_trait::async_trait;
@@ -9,12 +13,14 @@ use crate::token::{TokenError, TokenManager};
 use serde::export::fmt::Debug;
 use std::fmt::{Display, Formatter};
 
+#[allow(missing_docs)]
 pub mod api;
 #[doc(hidden)]
 pub mod rate;
 #[doc(hidden)]
 pub mod token;
 
+/// Auth0 management client.
 pub struct ManagementClient {
   rate: RateLimit,
   token: TokenManager,
@@ -22,6 +28,7 @@ pub struct ManagementClient {
 }
 
 impl ManagementClient {
+  /// Get management client builder.
   pub fn builder() -> ManagementClientBuilder {
     ManagementClientBuilder::new()
   }
@@ -84,7 +91,7 @@ impl ManagementClient {
 
     if !res.status().is_success() {
       return Err(ManagementClientError::from(
-        res.json::<ErrorResponse>().await?,
+        res.json::<Auth0ErrorResponse>().await?,
       ));
     }
 
@@ -101,6 +108,7 @@ impl ManagementClient {
   }
 }
 
+/// Management client interface.
 pub struct ManagementClientBuilder {
   domain: Option<String>,
   audience: Option<String>,
@@ -109,10 +117,15 @@ pub struct ManagementClientBuilder {
 }
 
 impl ManagementClientBuilder {
+  /// Get instance of management client builder.
   pub fn new() -> Self {
     Default::default()
   }
 
+  /// Get instance of management client.
+  ///
+  /// Creates instance of management client and validates builder options.  Valid builder options
+  /// requires all fields to be populated.
   pub fn build(self) -> Result<ManagementClient, ManagementClientBuilderError> {
     let client = Client::new();
     let domain = self
@@ -141,21 +154,39 @@ impl ManagementClientBuilder {
     })
   }
 
+  /// The auth0 tenant domain.
+  ///
+  /// The domain can be found in the Auth0 dashboard under your application settings.  Domain
+  /// will be the field labeled `Domain`.  Domains will be typically formatted as
+  /// `example.[us|eu|au].auth0.com`.
   pub fn domain(mut self, domain: &str) -> Self {
     self.domain = Some(domain.to_owned());
     self
   }
 
+  /// The value of the Identifier field of the `Auth0 Management API`.  
+  ///
+  /// The audience can be found in the Auth0 dashboard under you `API` settings.  Audience will be
+  /// in the field labeled `Identifier`.  The default management API identifier will be formatted as
+  /// `https://example.eu.auth0.com/api/v2`
   pub fn audience(mut self, audience: &str) -> Self {
     self.audience = Some(audience.to_owned());
     self
   }
 
+  /// The value of the Client ID field of the Machine-to-Machine application.
+  ///
+  /// The client id can be found in the Auth0 dashboard under your application settings.  Client ID
+  /// will be the field labeled `Client ID`.
   pub fn client_id(mut self, client_id: &str) -> Self {
     self.client_id = Some(client_id.to_owned());
     self
   }
 
+  /// The value of the Client Secret field of the Machine-to-Machine application.
+  ///
+  /// The client secret can be found in the Auth0 dashboard under your application settings.  
+  /// Client Secret will be the field labeled `Client Secret`.
   pub fn client_secret(mut self, client_secret: &str) -> Self {
     self.client_secret = Some(client_secret.to_owned());
     self
@@ -204,27 +235,40 @@ impl ClientRequestBuilder for RequestBuilder {
   }
 }
 
+/// The error type which is returned from building a [ManagementClient].
+#[derive(Debug, PartialOrd, PartialEq)]
+pub enum ManagementClientBuilderError {
+  /// Indicates builder didn't set [ManagementClientBuilder::domain].
+  MissingDomain,
+  /// Indicates builder didn't set [ManagementClientBuilder::audience].
+  MissingAudience,
+  /// Indicates builder didn't set [ManagementClientBuilder::client_id].
+  MissingClientID,
+  /// Indicates builder didn't set [ManagementClientBuilder::client_secret].
+  MissingClientSecret,
+}
+
 impl Display for ManagementClientBuilderError {
   fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
     write!(f, "{:?}", self)
   }
 }
 
-#[derive(Debug, PartialOrd, PartialEq)]
-pub enum ManagementClientBuilderError {
-  MissingDomain,
-  MissingAudience,
-  MissingClientID,
-  MissingClientSecret,
-}
-
 impl Error for ManagementClientBuilderError {}
 
+/// The error type which is returned from performing a request through [ManagementClient].
 #[derive(Debug)]
 pub enum ManagementClientError {
-  Auth0(ErrorResponse),
+  /// Auth0 error message response.
+  Auth0(Auth0ErrorResponse),
+  /// Auth0 authentication error.
   Auth0Token(TokenError),
+  /// Generic HTTP transport error.
   Transport(reqwest::Error),
+  /// Generic HTTP response malformed error.
+  ///
+  /// Can occur when Auth0 does not provide `x-rate-limit` headers.  Typically when an error occurs
+  /// on Auth0's end.
   MalformedResponse(RateLimitError),
 }
 
@@ -236,12 +280,13 @@ impl Display for ManagementClientError {
 
 impl Error for ManagementClientError {}
 
+/// The response definition which is returned when Auth0 responds with a non-success response.
 #[derive(Clone, PartialOrd, PartialEq, Deserialize)]
-pub struct ErrorResponse {
+pub struct Auth0ErrorResponse {
   message: String,
 }
 
-impl Debug for ErrorResponse {
+impl Debug for Auth0ErrorResponse {
   fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
     write!(f, "{}", self.message)
   }
@@ -253,8 +298,8 @@ impl From<TokenError> for ManagementClientError {
   }
 }
 
-impl From<ErrorResponse> for ManagementClientError {
-  fn from(res: ErrorResponse) -> Self {
+impl From<Auth0ErrorResponse> for ManagementClientError {
+  fn from(res: Auth0ErrorResponse) -> Self {
     ManagementClientError::Auth0(res)
   }
 }
