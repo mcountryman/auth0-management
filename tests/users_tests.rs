@@ -1,5 +1,5 @@
 use crate::helpers::get_client;
-use auth0_management::api::users::{User, UsersFindOpts, UsersManager};
+use auth0_management::api::users::{User, UserCreateOpts, UsersFindOpts, UsersManager};
 use serde::{Deserialize, Serialize};
 
 mod helpers;
@@ -10,24 +10,35 @@ struct AppData;
 struct UserData;
 
 #[tokio::test]
-async fn test_get_user() {
+async fn test_find_user() {
   let mut client = get_client();
-  let user: User<AppData, UserData> = client
-    .get_user("auth0|5f7a6299bbbd8200686a13e4")
+  let users: Vec<User<AppData, UserData>> = client
+    .find_users(UsersFindOpts::new().page(0).page_size(100))
     .await
-    .unwrap()
     .unwrap();
-
-  println!("user = {:?}", user);
 }
 
 #[tokio::test]
-async fn test_find_user() {
+async fn test_create_read_update_delete_user() {
   let mut client = get_client();
-  let user: Vec<User<AppData, UserData>> = client
-    .find_users(&UsersFindOpts::new().page(0).page_size(1000))
+  let user = client
+    .create_user(
+      UserCreateOpts::<AppData, UserData>::new()
+        .name("test_user")
+        .email("test_user@example.com")
+        .given_name("Test")
+        .family_name("User")
+        .password("Testing1234!")
+        .connection("Username-Password-Authentication"),
+    )
     .await
     .unwrap();
 
-  println!("user = {:?}", user);
+  let mut user: User<AppData, UserData> =
+    client.get_user(&user.user_id).await.unwrap().unwrap();
+
+  user.name = "test".to_owned();
+
+  client.update_user(&user).await.unwrap();
+  client.delete_user(&user.user_id).await.unwrap();
 }

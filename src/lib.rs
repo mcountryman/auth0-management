@@ -6,6 +6,7 @@ use serde::{de::DeserializeOwned, Deserialize};
 
 use crate::rate::{RateLimit, RateLimitError};
 use crate::token::{TokenError, TokenManager};
+use serde::export::fmt::Debug;
 use std::fmt::{Display, Formatter};
 
 pub mod api;
@@ -44,12 +45,12 @@ impl ManagementClient {
     self.request(Method::PATCH, path)
   }
 
-  // pub(crate) fn post(
-  //   &mut self,
-  //   path: &str,
-  // ) -> Result<RequestBuilder, Box<dyn Error + Send + Sync>> {
-  //   self.request(Method::POST, path)
-  // }
+  pub(crate) fn post(
+    &mut self,
+    path: &str,
+  ) -> Result<RequestBuilder, Box<dyn Error + Send + Sync>> {
+    self.request(Method::POST, path)
+  }
 
   pub(crate) fn delete(
     &mut self,
@@ -79,7 +80,7 @@ impl ManagementClient {
       .send()
       .await?;
 
-    if res.status() != StatusCode::OK {
+    if !res.status().is_success() {
       return Err(ManagementClientError::from(
         res.json::<ErrorResponse>().await?,
       ));
@@ -220,21 +221,18 @@ pub enum ManagementClientError {
 
 impl Display for ManagementClientError {
   fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-    match self {
-      ManagementClientError::Auth0(inner) => write!(f, "{}", inner.message),
-      _ => write!(f, "{}", self),
-    }
+    write!(f, "{}", self)
   }
 }
 
 impl Error for ManagementClientError {}
 
-#[derive(Clone, Debug, PartialOrd, PartialEq, Deserialize)]
+#[derive(Clone, PartialOrd, PartialEq, Deserialize)]
 pub struct ErrorResponse {
   message: String,
 }
 
-impl Display for ErrorResponse {
+impl Debug for ErrorResponse {
   fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
     write!(f, "{}", self.message)
   }
