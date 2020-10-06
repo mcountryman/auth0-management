@@ -30,6 +30,7 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           cargo login "$CRATES_TOKEN"
+          cargo install cargo-release
         env:
           CRATES_TOKEN: ${{ secrets.CRATES_TOKEN }}
 
