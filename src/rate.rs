@@ -69,17 +69,11 @@ impl RateLimit {
 }
 
 pub trait RateLimitResponse: Sized {
-  fn rate_limit(
-    self,
-    rate_limit: &mut RateLimit,
-  ) -> Result<Self, Box<dyn Error + Send + Sync>>;
+  fn rate_limit(self, rate_limit: &mut RateLimit) -> Result<Self, RateLimitError>;
 }
 
 impl RateLimitResponse for Response {
-  fn rate_limit(
-    self,
-    rate_limit: &mut RateLimit,
-  ) -> Result<Self, Box<dyn Error + Send + Sync>> {
+  fn rate_limit(self, rate_limit: &mut RateLimit) -> Result<Self, RateLimitError> {
     rate_limit.read(&self)?;
     Ok(self)
   }

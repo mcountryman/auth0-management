@@ -1,39 +1,18 @@
 #![warn(missing_docs)]
-//! Asynchronous Auth0 Management API
-//!
-//! ### Quick start
-//! ```
-//! use std::error::Error;
-//! use auth0_management::ManagementClient;
-//! use auth0_management::api::users::{UsersManager, UserCreateOpts, User};
-//!
-//! async fn create_admin_user() -> Result<User, Box<dyn Error>> {
-//!   let mut client = ManagementClient::builder()
-//!     .domain("MY_DOMAIN")
-//!     .audience("https://localhost:8080")
-//!     .client_id("MY_CLIENT_ID")
-//!     .client_secret("MY_CLIENT_SECRET")
-//!     .build()?;
-//!     
-//!   client.create_user(
-//!     UserCreateOpts::new()
-//!       .name("administrator")
-//!       .email("admin@example.com")
-//!       .password("MY_PASSWORD")
-//!   ).await
-//! }
-//! ```
+//! Unofficial Auth0 Management API
 
 use std::error::Error;
-
-use async_trait::async_trait;
-use reqwest::{Client, Method, RequestBuilder, Response, Url};
-use serde::{de::DeserializeOwned, Deserialize};
-
-use crate::rate::{RateLimit, RateLimitError};
-use crate::token::{TokenError, TokenManager};
-use serde::export::fmt::Debug;
 use std::fmt::{Display, Formatter};
+
+use reqwest::Client;
+use serde::export::fmt::Debug;
+use serde::Deserialize;
+
+use crate::rate::{RateLimit, RateLimitError, RateLimitResponse};
+use crate::request::Auth0Request;
+use crate::token::{TokenError, TokenManager};
+
+mod request;
 
 #[allow(missing_docs)]
 pub mod api;
@@ -43,102 +22,52 @@ pub mod rate;
 pub mod token;
 
 /// Auth0 management client.
-pub struct ManagementClient {
+pub struct Auth0 {
   rate: RateLimit,
   token: TokenManager,
   client: Client,
 }
 
-impl ManagementClient {
-  /// Get management client builder.
-  pub fn builder() -> ManagementClientBuilder {
-    ManagementClientBuilder::new()
+impl Auth0 {
+  /// Create Auth0 client
+  pub fn builder() -> Auth0Builder {
+    Default::default()
   }
 
-  pub(crate) fn get(
-    &mut self,
-    path: &str,
-  ) -> Result<RequestBuilder, Box<dyn Error + Send + Sync>> {
-    self.request(Method::GET, path)
-  }
-
-  // pub(crate) fn put(
-  //   &mut self,
-  //   path: &str,
-  // ) -> Result<RequestBuilder, Box<dyn Error + Send + Sync>> {
-  //   self.request(Method::PUT, path)
-  // }
-
-  pub(crate) fn patch(
-    &mut self,
-    path: &str,
-  ) -> Result<RequestBuilder, Box<dyn Error + Send + Sync>> {
-    self.request(Method::PATCH, path)
-  }
-
-  pub(crate) fn post(
-    &mut self,
-    path: &str,
-  ) -> Result<RequestBuilder, Box<dyn Error + Send + Sync>> {
-    self.request(Method::POST, path)
-  }
-
-  pub(crate) fn delete(
-    &mut self,
-    path: &str,
-  ) -> Result<RequestBuilder, Box<dyn Error + Send + Sync>> {
-    self.request(Method::DELETE, path)
-  }
-
-  pub(crate) fn request(
-    &mut self,
-    method: Method,
-    path: &str,
-  ) -> Result<RequestBuilder, Box<dyn Error + Send + Sync>> {
-    Ok(self.client.request(
-      method,
-      Url::parse(&format!("https://{}", self.token.domain))?.join(path)?,
-    ))
-  }
-
-  pub(crate) async fn send(
-    &mut self,
-    req: RequestBuilder,
-  ) -> Result<Response, ManagementClientError> {
+  /// Query API
+  pub async fn query<R>(&mut self, req: R) -> Result<R::Response, Auth0Error>
+  where
+    R: Auth0Request,
+  {
     let token = self.token.get_token().await?;
     let res = req
-      .header("Authorization", format!("Bearer {}", token))
+      .build(|method, path| self.client.request(method, path))
+      .bearer_auth(&token)
       .send()
       .await?;
 
-    if !res.status().is_success() {
-      return Err(ManagementClientError::from(
-        res.json::<Auth0ErrorResponse>().await?,
-      ));
+    if res.status().is_success() {
+      Ok(
+        res
+          .rate_limit(&mut self.rate)?
+          .json::<R::Response>()
+          .await?,
+      )
+    } else {
+      Err(Auth0Error::from(res.json::<Auth0ErrorResponse>().await?))
     }
-
-    self.rate.read(&res)?;
-
-    Ok(res)
-  }
-
-  pub(crate) async fn json<T: DeserializeOwned>(
-    &mut self,
-    req: RequestBuilder,
-  ) -> Result<T, Box<dyn Error + Send + Sync>> {
-    Ok(self.send(req).await?.json::<T>().await?)
   }
 }
 
 /// Management client interface.
-pub struct ManagementClientBuilder {
+pub struct Auth0Builder {
   domain: Option<String>,
   audience: Option<String>,
   client_id: Option<String>,
   client_secret: Option<String>,
 }
 
-impl ManagementClientBuilder {
+impl Auth0Builder {
   /// Get instance of management client builder.
   pub fn new() -> Self {
     Default::default()
@@ -148,22 +77,16 @@ impl ManagementClientBuilder {
   ///
   /// Creates instance of management client and validates builder options.  Valid builder options
   /// requires all fields to be populated.
-  pub fn build(self) -> Result<ManagementClient, ManagementClientBuilderError> {
+  pub fn build(self) -> Result<Auth0, Auth0BuilderError> {
     let client = Client::new();
-    let domain = self
-      .domain
-      .ok_or(ManagementClientBuilderError::MissingDomain)?;
-    let audience = self
-      .audience
-      .ok_or(ManagementClientBuilderError::MissingAudience)?;
-    let client_id = self
-      .client_id
-      .ok_or(ManagementClientBuilderError::MissingClientID)?;
+    let domain = self.domain.ok_or(Auth0BuilderError::MissingDomain)?;
+    let audience = self.audience.ok_or(Auth0BuilderError::MissingAudience)?;
+    let client_id = self.client_id.ok_or(Auth0BuilderError::MissingClientID)?;
     let client_secret = self
       .client_secret
-      .ok_or(ManagementClientBuilderError::MissingClientSecret)?;
+      .ok_or(Auth0BuilderError::MissingClientSecret)?;
 
-    Ok(ManagementClient {
+    Ok(Auth0 {
       rate: RateLimit::new(),
       token: TokenManager::new(
         client.clone(),
@@ -215,7 +138,7 @@ impl ManagementClientBuilder {
   }
 }
 
-impl Default for ManagementClientBuilder {
+impl Default for Auth0Builder {
   fn default() -> Self {
     Self {
       domain: None,
@@ -226,114 +149,68 @@ impl Default for ManagementClientBuilder {
   }
 }
 
-#[doc(hidden)]
-#[async_trait]
-pub trait ClientRequestBuilder {
-  async fn send_pass(
-    self,
-    client: &mut ManagementClient,
-  ) -> Result<(), Box<dyn Error + Send + Sync>>;
-  async fn send_json<T: DeserializeOwned>(
-    self,
-    client: &mut ManagementClient,
-  ) -> Result<T, Box<dyn Error + Send + Sync>>;
+#[derive(Debug)]
+pub enum Auth0Error {
+  Http(reqwest::Error),
+  Token(TokenError),
+  Auth0(String),
+  RateLimit(RateLimitError),
 }
 
-#[async_trait]
-impl ClientRequestBuilder for RequestBuilder {
-  async fn send_pass(
-    self,
-    client: &mut ManagementClient,
-  ) -> Result<(), Box<dyn Error + Send + Sync>> {
-    client.send(self).await?;
-    Ok(())
-  }
-
-  async fn send_json<T: DeserializeOwned>(
-    self,
-    client: &mut ManagementClient,
-  ) -> Result<T, Box<dyn Error + Send + Sync>> {
-    client.json(self).await
-  }
-}
-
-/// The error type which is returned from building a [ManagementClient].
-#[derive(Debug, PartialOrd, PartialEq)]
-pub enum ManagementClientBuilderError {
-  /// Indicates builder didn't set [ManagementClientBuilder::domain].
-  MissingDomain,
-  /// Indicates builder didn't set [ManagementClientBuilder::audience].
-  MissingAudience,
-  /// Indicates builder didn't set [ManagementClientBuilder::client_id].
-  MissingClientID,
-  /// Indicates builder didn't set [ManagementClientBuilder::client_secret].
-  MissingClientSecret,
-}
-
-impl Display for ManagementClientBuilderError {
+impl Display for Auth0Error {
   fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
     write!(f, "{:?}", self)
   }
 }
 
-impl Error for ManagementClientBuilderError {}
+impl Error for Auth0Error {}
 
-/// The error type which is returned from performing a request through [ManagementClient].
-#[derive(Debug)]
-pub enum ManagementClientError {
-  /// Auth0 error message response.
-  Auth0(Auth0ErrorResponse),
-  /// Auth0 authentication error.
-  Auth0Token(TokenError),
-  /// Generic HTTP transport error.
-  Transport(reqwest::Error),
-  /// Generic HTTP response malformed error.
-  ///
-  /// Can occur when Auth0 does not provide `x-rate-limit` headers.  Typically when an error occurs
-  /// on Auth0's end.
-  MalformedResponse(RateLimitError),
-}
-
-impl Display for ManagementClientError {
-  fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-    write!(f, "{}", self)
+impl From<TokenError> for Auth0Error {
+  fn from(inner: TokenError) -> Self {
+    Auth0Error::Token(inner)
   }
 }
 
-impl Error for ManagementClientError {}
+impl From<reqwest::Error> for Auth0Error {
+  fn from(inner: reqwest::Error) -> Self {
+    Auth0Error::Http(inner)
+  }
+}
 
-/// The response definition which is returned when Auth0 responds with a non-success response.
-#[derive(Clone, PartialOrd, PartialEq, Deserialize)]
+impl From<RateLimitError> for Auth0Error {
+  fn from(inner: RateLimitError) -> Self {
+    Auth0Error::RateLimit(inner)
+  }
+}
+
+#[derive(Deserialize)]
 pub struct Auth0ErrorResponse {
   message: String,
 }
 
-impl Debug for Auth0ErrorResponse {
+impl From<Auth0ErrorResponse> for Auth0Error {
+  fn from(inner: Auth0ErrorResponse) -> Self {
+    Auth0Error::Auth0(inner.message)
+  }
+}
+
+/// The error type which is returned from building a [Auth0].
+#[derive(Debug, PartialOrd, PartialEq)]
+pub enum Auth0BuilderError {
+  /// Indicates builder didn't set [Auth0Builder::domain].
+  MissingDomain,
+  /// Indicates builder didn't set [Auth0Builder::audience].
+  MissingAudience,
+  /// Indicates builder didn't set [Auth0Builder::client_id].
+  MissingClientID,
+  /// Indicates builder didn't set [Auth0Builder::client_secret].
+  MissingClientSecret,
+}
+
+impl Display for Auth0BuilderError {
   fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-    write!(f, "{}", self.message)
+    write!(f, "{:?}", self)
   }
 }
 
-impl From<TokenError> for ManagementClientError {
-  fn from(err: TokenError) -> Self {
-    ManagementClientError::Auth0Token(err)
-  }
-}
-
-impl From<Auth0ErrorResponse> for ManagementClientError {
-  fn from(res: Auth0ErrorResponse) -> Self {
-    ManagementClientError::Auth0(res)
-  }
-}
-
-impl From<reqwest::Error> for ManagementClientError {
-  fn from(err: reqwest::Error) -> Self {
-    ManagementClientError::Transport(err)
-  }
-}
-
-impl From<RateLimitError> for ManagementClientError {
-  fn from(err: RateLimitError) -> Self {
-    ManagementClientError::MalformedResponse(err)
-  }
-}
+impl Error for Auth0BuilderError {}
