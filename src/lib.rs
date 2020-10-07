@@ -1,7 +1,29 @@
 #![warn(missing_docs)]
+//! Asynchronous Auth0 Management API
 //!
+//! ### Quick start
+//! ```
+//! use std::error::Error;
+//! use auth0_management::ManagementClient;
+//! use auth0_management::api::users::{UsersManager, UserCreateOpts, User};
 //!
-//!
+//! async fn create_admin_user() -> Result<User, Box<dyn Error>> {
+//!   let mut client = ManagementClient::builder()
+//!     .domain("MY_DOMAIN")
+//!     .audience("https://localhost:8080")
+//!     .client_id("MY_CLIENT_ID")
+//!     .client_secret("MY_CLIENT_SECRET")
+//!     .build()?;
+//!     
+//!   client.create_user(
+//!     UserCreateOpts::new()
+//!       .name("administrator")
+//!       .email("admin@example.com")
+//!       .password("MY_PASSWORD")
+//!   ).await
+//! }
+//! ```
+
 use std::error::Error;
 
 use async_trait::async_trait;

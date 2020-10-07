@@ -16,7 +16,7 @@ pub struct Identity {
 }
 
 #[derive(Deserialize, Debug)]
-pub struct User<AppMetadata, UserMetadata> {
+pub struct User<AppMetadata = (), UserMetadata = ()> {
   pub user_id: String,
   pub email: String,
   pub email_verified: bool,

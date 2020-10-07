@@ -36,6 +36,7 @@ async fn test_create_read_update_delete_user() {
 
   let mut user: User<AppData, UserData> =
     client.get_user(&user.user_id).await.unwrap().unwrap();
+
   let id = user.user_id.to_owned();
 
   user.name = "test".to_owned();
