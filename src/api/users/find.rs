@@ -3,18 +3,14 @@ use serde::de::DeserializeOwned;
 use serde::export::PhantomData;
 use serde::Serialize;
 
-use crate::api::page::{Page, Paged};
+use crate::api::page::{Ordering, Page, PagedBuilder, Sort};
 use crate::api::users::{EmptyAppMetadata, EmptyUserMetadata, User};
 use crate::request::Auth0Request;
+use std::ops::{Deref, DerefMut};
 
 /// Provide data to find users.
 #[derive(Serialize)]
-pub struct FindUsers<AppMetadata = EmptyAppMetadata, UserMetadata = EmptyUserMetadata>(
-  FindUsersPaged<AppMetadata, UserMetadata>,
-);
-
-#[derive(Serialize)]
-struct FindUsersPaged<AppMetadata, UserMetadata> {
+pub struct FindUsers<AppMetadata = EmptyAppMetadata, UserMetadata = EmptyUserMetadata> {
   #[serde(flatten)]
   page: Page,
 
@@ -29,19 +25,21 @@ impl<AppMetadata, UserMetadata> FindUsers<AppMetadata, UserMetadata> {
   }
 }
 
-impl<AppMetadata, UserMetadata> Paged for FindUsersPaged<AppMetadata, UserMetadata> {
-  fn page(&mut self) -> &mut Page {
+impl<AppMetadata, UserMetadata> Deref for FindUsers<AppMetadata, UserMetadata> {
+  type Target = Page;
+
+  fn deref(&self) -> &Self::Target {
+    &self.page
+  }
+}
+
+impl<AppMetadata, UserMetadata> DerefMut for FindUsers<AppMetadata, UserMetadata> {
+  fn deref_mut(&mut self) -> &mut Self::Target {
     &mut self.page
   }
 }
 
 impl<AppMetadata, UserMetadata> Default for FindUsers<AppMetadata, UserMetadata> {
-  fn default() -> Self {
-    Self(Default::default())
-  }
-}
-
-impl<AppMetadata, UserMetadata> Default for FindUsersPaged<AppMetadata, UserMetadata> {
   fn default() -> Self {
     Self {
       page: Default::default(),
@@ -61,6 +59,6 @@ impl<AppMetadata: DeserializeOwned, UserMetadata: DeserializeOwned> Auth0Request
   where
     F: FnOnce(Method, &str) -> RequestBuilder,
   {
-    factory(Method::GET, "api/v2/users").query(&self.0)
+    factory(Method::GET, "api/v2/users").query(self)
   }
 }

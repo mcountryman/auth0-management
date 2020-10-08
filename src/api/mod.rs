@@ -1,8 +1,9 @@
 #[allow(missing_docs)]
 pub mod connection;
-mod page;
+pub mod page;
 #[allow(missing_docs)]
 pub mod strategy;
 pub mod users;
 
+pub use page::*;
 pub use users::*;

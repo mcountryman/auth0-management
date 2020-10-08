@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use auth0_management::FindUsers;
+use auth0_management::{FindUsers, Ordering, PagedBuilder};
 
 use crate::helpers::get_client;
 
@@ -18,7 +18,9 @@ async fn test_find_user() {
   let users = client
     .query(
       FindUsers::<AppData, UserData>::new() //
-        .page_size(0),
+        .sort("username", Ordering::Ascending)
+        .page(0)
+        .per_page(10),
     )
     .await
     .unwrap();
