@@ -35,13 +35,17 @@ impl Auth0 {
   }
 
   /// Query API
-  pub async fn query<R>(&mut self, req: R) -> Result<R::Response, Auth0Error>
+  pub async fn query<R>(&mut self, req: &R) -> Result<R::Response, Auth0Error>
   where
     R: Auth0Request,
   {
     let token = self.token.get_token().await?;
     let res = req
-      .build(|method, path| self.client.request(method, path))
+      .build(|method, path| {
+        self
+          .client
+          .request(method, &format!("https://{}/{}", self.token.domain, path))
+      })
       .bearer_auth(&token)
       .send()
       .await?;

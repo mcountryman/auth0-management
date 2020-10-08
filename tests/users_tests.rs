@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use auth0_management::api::users::FindUsersRequest;
+use auth0_management::api::users::{CreateUser, FindUsers};
 
 use crate::helpers::get_client;
 
@@ -15,15 +15,18 @@ struct UserData;
 #[tokio::test]
 async fn test_find_user() {
   let mut client = get_client();
-
-  client
+  let users = client
     .query(
-      FindUsersRequest::<AppData, UserData>::new()
+      FindUsers::<AppData, UserData>::new() //
         .page(0)
         .page_size(100),
     )
     .await
     .unwrap();
+
+  for user in users {
+    println!("{:?}", user);
+  }
 }
 
 // #[tokio::test]
