@@ -21,6 +21,8 @@ pub mod rate;
 #[doc(hidden)]
 pub mod token;
 
+pub use api::*;
+
 /// Auth0 management client.
 pub struct Auth0 {
   rate: RateLimit,

@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use auth0_management::api::users::{CreateUser, FindUsers, UserUpdate};
+use auth0_management::FindUsers;
 
 use crate::helpers::get_client;
 
