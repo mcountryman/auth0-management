@@ -72,6 +72,7 @@ impl<AppMetadata, UserMetadata> UpdateUser<AppMetadata, UserMetadata> {
     }
   }
 
+  /// ID of the user which can be used when interacting with other APIs.
   pub fn user_id(&mut self, id: &str) -> &mut Self {
     self.user_id = id.to_owned();
     self
