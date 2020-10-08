@@ -18,8 +18,7 @@ async fn test_find_user() {
   let users = client
     .query(
       FindUsers::<AppData, UserData>::new() //
-        .page(0)
-        .page_size(100),
+        .page_size(0),
     )
     .await
     .unwrap();
