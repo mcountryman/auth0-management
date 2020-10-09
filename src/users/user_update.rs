@@ -1,13 +1,32 @@
+//! Update a user.
 use reqwest::{Method, RequestBuilder};
 use serde::Serialize;
 
-use crate::api::users::{EmptyAppMetadata, EmptyUserMetadata, User};
 use crate::request::Auth0Request;
+use crate::users::{EmptyAppMetadata, EmptyUserMetadata, User};
 use serde::de::DeserializeOwned;
 
-/// Provides data to update user.
+/// Update a user.
+/// Some considerations:
+///
+/// * The properties of the new object will replace the old ones.
+/// * The metadata fields are an exception to this rule (`user_metadata` and `app_metadata`). These
+/// properties are merged instead of being replaced but be careful, the merge only occurs on the
+/// first level.
+/// * If you are updating `email`, `email_verified`, `phone_number`, `phone_verified`, `username` or
+/// `password` of a secondary identity, you need to specify the connection property too.
+/// * If you are updating `email` or `phone_number` you can specify, optionally, the `client_id`
+/// property.
+/// * Updating `email_verified` is not supported for enterprise and passwordless sms connections.
+/// * Updating the `blocked` to `false` does not affect the user's blocked state from an excessive
+/// amount of incorrectly provided credentials. Use the "Unblock a user" endpoint from the
+/// "User Blocks" API to change the user's state.
+///
+/// # Scopes
+/// * `update:users`
+/// * `update:users_app_metadata`
 #[derive(Serialize)]
-pub struct UpdateUser<AppMetadata = EmptyAppMetadata, UserMetadata = EmptyUserMetadata> {
+pub struct UserUpdate<AppMetadata = EmptyAppMetadata, UserMetadata = EmptyUserMetadata> {
   #[serde(skip_serializing)]
   user_id: String,
   #[serde(skip_serializing_if = "Option::is_none")]
@@ -47,7 +66,7 @@ pub struct UpdateUser<AppMetadata = EmptyAppMetadata, UserMetadata = EmptyUserMe
   user_metadata: Option<UserMetadata>,
 }
 
-impl<AppMetadata, UserMetadata> UpdateUser<AppMetadata, UserMetadata> {
+impl<AppMetadata, UserMetadata> UserUpdate<AppMetadata, UserMetadata> {
   /// Create update user request.
   pub fn new(id: &str) -> Self {
     Self {
@@ -188,7 +207,7 @@ impl<AppMetadata, UserMetadata> UpdateUser<AppMetadata, UserMetadata> {
 impl<
     AppMetadata: Serialize + DeserializeOwned,
     UserMetadata: Serialize + DeserializeOwned,
-  > Auth0Request for UpdateUser<AppMetadata, UserMetadata>
+  > Auth0Request for UserUpdate<AppMetadata, UserMetadata>
 {
   type Response = User<AppMetadata, UserMetadata>;
 

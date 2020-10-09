@@ -1,11 +1,20 @@
-use crate::api::users::{EmptyAppMetadata, EmptyUserMetadata, User};
+//! Create a new user.
 use crate::request::Auth0Request;
+use crate::users::{EmptyAppMetadata, EmptyUserMetadata, User};
 use reqwest::{Method, RequestBuilder};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
+/// Create a new user for a given [database](https://auth0.com/docs/connections/database) or
+/// [passwordless](https://auth0.com/docs/connections/passwordless) connection.
+///
+/// Note: connection is required but other parameters such as email and password are dependent
+/// upon the type of connection.
+///
+/// # Scopes
+/// * `create:users`
 #[derive(Serialize)]
-pub struct CreateUser<AppMetadata = EmptyAppMetadata, UserMetadata = EmptyUserMetadata> {
+pub struct UserCreate<AppMetadata = EmptyAppMetadata, UserMetadata = EmptyUserMetadata> {
   #[serde(skip_serializing_if = "Option::is_none")]
   email: Option<String>,
   #[serde(skip_serializing_if = "Option::is_none")]
@@ -43,7 +52,8 @@ pub struct CreateUser<AppMetadata = EmptyAppMetadata, UserMetadata = EmptyUserMe
   user_metadata: Option<UserMetadata>,
 }
 
-impl<AppMetadata, UserMetadata> CreateUser<AppMetadata, UserMetadata> {
+impl<AppMetadata, UserMetadata> UserCreate<AppMetadata, UserMetadata> {
+  /// Create create user request.
   pub fn new() -> Self {
     Default::default()
   }
@@ -154,7 +164,7 @@ impl<AppMetadata, UserMetadata> CreateUser<AppMetadata, UserMetadata> {
   }
 }
 
-impl<AppMetadata, UserMetadata> Default for CreateUser<AppMetadata, UserMetadata> {
+impl<AppMetadata, UserMetadata> Default for UserCreate<AppMetadata, UserMetadata> {
   fn default() -> Self {
     Self {
       email: None,
@@ -182,7 +192,7 @@ impl<AppMetadata, UserMetadata> Default for CreateUser<AppMetadata, UserMetadata
 impl<
     AppMetadata: Serialize + DeserializeOwned,
     UserMetadata: Serialize + DeserializeOwned,
-  > Auth0Request for CreateUser<AppMetadata, UserMetadata>
+  > Auth0Request for UserCreate<AppMetadata, UserMetadata>
 {
   type Response = User<AppMetadata, UserMetadata>;
 

@@ -1,14 +1,14 @@
 use serde::{Deserialize, Serialize};
 
-pub use assign::*;
-pub use delete::*;
-pub use get::*;
+pub use user_permissions_delete::*;
+pub use user_permissions_get::*;
+pub use user_permissions_update::*;
 
-pub mod assign;
-pub mod delete;
-pub mod get;
+pub mod user_permissions_delete;
+pub mod user_permissions_get;
+pub mod user_permissions_update;
 
-/// User permission.
+/// Permission.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Permission {
   /// Name of this permission.

@@ -8,6 +8,11 @@ use reqwest::Client;
 use serde::export::fmt::Debug;
 use serde::Deserialize;
 
+#[doc(inline)]
+pub use api::*;
+pub use page::*;
+pub use users::*;
+
 use crate::rate::{RateLimit, RateLimitError, RateLimitResponse};
 use crate::request::Auth0Request;
 use crate::token::{TokenError, TokenManager};
@@ -16,12 +21,12 @@ mod request;
 
 #[allow(missing_docs)]
 pub mod api;
+pub mod page;
 #[doc(hidden)]
 pub mod rate;
 #[doc(hidden)]
 pub mod token;
-
-pub use api::*;
+pub mod users;
 
 /// Auth0 management client.
 pub struct Auth0 {

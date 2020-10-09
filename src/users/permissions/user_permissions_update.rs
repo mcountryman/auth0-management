@@ -1,24 +1,24 @@
 //! Assign permissions to a user.
-//!
-//! # Scopes
-//! * `update:users`
-//!
-//! # Example
-//! ```
-//! async fn add_permission() {}
-//! ```
 
 use crate::request::Auth0Request;
 use crate::Permission;
 use reqwest::{Method, RequestBuilder};
 
-/// Assign user permissions request.
-pub struct AssignUserPermissions {
+/// Assign user permissions.
+///
+/// # Scopes
+/// * `update:users`
+///
+/// # Example
+/// ```
+/// async fn add_permission() {}
+/// ```
+pub struct UserPermissionsUpdate {
   id: String,
   permissions: Vec<Permission>,
 }
 
-impl AssignUserPermissions {
+impl UserPermissionsUpdate {
   /// Create assign user permissions request.
   ///
   /// # Arguments
@@ -49,7 +49,7 @@ impl AssignUserPermissions {
   }
 }
 
-impl Auth0Request for AssignUserPermissions {
+impl Auth0Request for UserPermissionsUpdate {
   type Response = ();
 
   fn build<F>(&self, factory: F) -> RequestBuilder
@@ -67,12 +67,12 @@ impl Auth0Request for AssignUserPermissions {
 #[cfg(test)]
 mod tests {
   use crate::request::Auth0Request;
-  use crate::{AssignUserPermissions, Permission};
+  use crate::{UserPermissionsUpdate, Permission};
   use reqwest::Client;
 
   #[test]
   fn test_create() {
-    let req = AssignUserPermissions::new("USER_ID")
+    let req = UserPermissionsUpdate::new("USER_ID")
       .permission(Permission {
         name: "test1".to_string(),
         description: "test1".to_string(),

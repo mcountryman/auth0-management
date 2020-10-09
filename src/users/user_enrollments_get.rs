@@ -1,13 +1,5 @@
 //! Retrieve the first confirmed [Guardian](https://auth0.com/docs/multifactor-authentication/guardian)
 //! enrollment for a user.
-//!
-//! # Scopes
-//! * `read:users`
-//!
-//! # Example
-//! ```
-//! async fn dump_enrollments() {}
-//! ```
 
 use chrono::{DateTime, Utc};
 use reqwest::{Method, RequestBuilder};
@@ -16,9 +8,19 @@ use serde::Deserialize;
 use crate::request::Auth0Request;
 use crate::User;
 
-/// User enrollment.
+/// Retrieve the first confirmed [Guardian](https://auth0
+/// .com/docs/multifactor-authentication/guardian)
+/// enrollment for a user.
+///
+/// # Scopes
+/// * `read:users`
+///
+/// # Example
+/// ```
+/// async fn dump_enrollments() {}
+/// ```
 #[derive(Debug, Clone, Deserialize)]
-pub struct Enrollment {
+pub struct UserEnrollmentsGet {
   /// ID of this enrollment.
   pub id: String,
   /// Status of this enrollment. Can be `pending` or `confirmed`.
@@ -66,7 +68,7 @@ impl<U, A> From<&User<U, A>> for GetUserEnrollments {
 }
 
 impl Auth0Request for GetUserEnrollments {
-  type Response = Vec<Enrollment>;
+  type Response = Vec<UserEnrollmentsGet>;
 
   fn build<F>(&self, factory: F) -> RequestBuilder
   where

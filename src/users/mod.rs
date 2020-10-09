@@ -3,23 +3,31 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
-pub use create::*;
-pub use delete::*;
-pub use enrollments::*;
-pub use find::*;
-pub use get::*;
-pub use logs::*;
+#[doc(inline)]
 pub use permissions::*;
-pub use update::*;
+#[doc(inline)]
+pub use user_create::*;
+#[doc(inline)]
+pub use user_delete::*;
+#[doc(inline)]
+pub use user_enrollments_get::*;
+#[doc(inline)]
+pub use user_get::*;
+#[doc(inline)]
+pub use user_logs_get::*;
+#[doc(inline)]
+pub use user_update::*;
+#[doc(inline)]
+pub use users_find::*;
 
-pub mod create;
-pub mod delete;
-pub mod enrollments;
-pub mod find;
-pub mod get;
-pub mod logs;
 pub mod permissions;
-pub mod update;
+pub mod user_create;
+pub mod user_delete;
+pub mod user_enrollments_get;
+pub mod user_get;
+pub mod user_logs_get;
+pub mod user_update;
+pub mod users_find;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Identity {

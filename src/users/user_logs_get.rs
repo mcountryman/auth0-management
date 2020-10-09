@@ -1,37 +1,4 @@
 //! Retrieve log events for a specific user.
-//!
-//! Note: For more information on all possible event types, their respective acronyms and
-//! descriptions, see [Log Data Event Listing](https://auth0.com/docs/logs#log-data-event-listing).
-//!
-//! For more information on the list of fields that can be used in `sort`, see
-//! [Searchable Fields](https://auth0.com/docs/logs/query-syntax#searchable-fields).
-//!
-//! Auth0 [limits the number of logs](https://auth0.com/docs/logs#limitations) you can
-//! return by search criteria to 100 logs per request. Furthermore, you may only paginate
-//! through up to 1,000 search results. If you exceed this threshold, please redefine your
-//! search.
-//!
-//! # Scopes
-//! * `read:logs`
-//! * `read:logs_users`
-//!
-//! # Example
-//! ```
-//! use auth0_management::{Auth0, User, GetUserLogs, Ordering, PagedBuilder};
-//!  
-//! async fn dump_logs(client: &mut Auth0, user: &User) {
-//!   let logs = client.query(
-//!     GetUserLogs::from(user)
-//!       .sort("date", Ordering::Ascending)
-//!       .per_page(100)
-//!   ).await.unwrap();
-//!
-//!   for log in logs {
-//!     println!("kind: {}", log.kind);
-//!     println!("date: {}", log.date);
-//!   }
-//! }
-//! ```
 use std::ops::{Deref, DerefMut};
 
 use chrono::{DateTime, Utc};
@@ -113,13 +80,46 @@ pub struct UserLogLocationInfo {
   pub continent_code: String,
 }
 
-/// Provides data for user logs request.
-pub struct GetUserLogs {
+/// Retrieve log events for a specific user.
+///
+/// Note: For more information on all possible event types, their respective acronyms and
+/// descriptions, see [Log Data Event Listing](https://auth0.com/docs/logs#log-data-event-listing).
+///
+/// For more information on the list of fields that can be used in `sort`, see
+/// [Searchable Fields](https://auth0.com/docs/logs/query-syntax#searchable-fields).
+///
+/// Auth0 [limits the number of logs](https://auth0.com/docs/logs#limitations) you can
+/// return by search criteria to 100 logs per request. Furthermore, you may only paginate
+/// through up to 1,000 search results. If you exceed this threshold, please redefine your
+/// search.
+///
+/// # Scopes
+/// * `read:logs`
+/// * `read:logs_users`
+///
+/// # Example
+/// ```
+/// use auth0_management::{Auth0, User, UserLogsGet, Ordering, PagedBuilder};
+///  
+/// async fn dump_logs(client: &mut Auth0, user: &User) {
+///   let logs = client.query(
+///     UserLogsGet::from(user)
+///       .sort("date", Ordering::Ascending)
+///       .per_page(100)
+///   ).await.unwrap();
+///
+///   for log in logs {
+///     println!("kind: {}", log.kind);
+///     println!("date: {}", log.date);
+///   }
+/// }
+/// ```
+pub struct UserLogsGet {
   id: String,
   page: Page,
 }
 
-impl GetUserLogs {
+impl UserLogsGet {
   /// Create [GetUserLogs] request.
   pub fn new(id: &str) -> Self {
     Self {
@@ -129,7 +129,7 @@ impl GetUserLogs {
   }
 }
 
-impl Deref for GetUserLogs {
+impl Deref for UserLogsGet {
   type Target = Page;
 
   fn deref(&self) -> &Self::Target {
@@ -137,25 +137,25 @@ impl Deref for GetUserLogs {
   }
 }
 
-impl DerefMut for GetUserLogs {
+impl DerefMut for UserLogsGet {
   fn deref_mut(&mut self) -> &mut Self::Target {
     &mut self.page
   }
 }
 
-impl<A, U> From<User<A, U>> for GetUserLogs {
+impl<A, U> From<User<A, U>> for UserLogsGet {
   fn from(user: User<A, U>) -> Self {
     Self::new(&user.user_id)
   }
 }
 
-impl<A, U> From<&User<A, U>> for GetUserLogs {
+impl<A, U> From<&User<A, U>> for UserLogsGet {
   fn from(user: &User<A, U>) -> Self {
     Self::new(&user.user_id)
   }
 }
 
-impl Auth0Request for GetUserLogs {
+impl Auth0Request for UserLogsGet {
   type Response = Vec<UserLog>;
 
   fn build<F>(&self, factory: F) -> RequestBuilder

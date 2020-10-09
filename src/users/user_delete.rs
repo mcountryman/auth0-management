@@ -1,12 +1,17 @@
+//! Delete a user.
 use reqwest::{Method, RequestBuilder};
 
 use crate::request::Auth0Request;
 
-/// Provides data used to delete user using user_id field.
-pub struct UpdateUser(String);
+/// Delete a user.
+///
+/// # Scopes
+/// * `delete:users`
+pub struct UserDelete(String);
 
-impl UpdateUser {
+impl UserDelete {
   /// Create delete user request.
+  ///
   /// # Arguments
   /// * `id` - The id of the user to delete.
   pub fn new(id: &str) -> Self {
@@ -14,7 +19,7 @@ impl UpdateUser {
   }
 }
 
-impl Auth0Request for UpdateUser {
+impl Auth0Request for UserDelete {
   type Response = ();
 
   fn build<F>(&self, factory: F) -> RequestBuilder

@@ -1,17 +1,4 @@
 //! Remove permissions from a user.
-//!
-//! # Scopes
-//! * `update:users`
-//!
-//! # Example
-//! ```
-//! use auth0_management::DeleteUserPermissions;
-//!
-//! async fn delete_permissions() {
-//!   DeleteUserPermissions::new()
-//!     .permissions(Vec::new());
-//! }
-//! ```
 
 use reqwest::{Method, RequestBuilder};
 
@@ -19,12 +6,25 @@ use crate::request::Auth0Request;
 use crate::Permission;
 
 /// Provides data for creating delete user permission request.
-pub struct DeleteUserPermissions {
+///
+/// # Scopes
+/// * `update:users`
+///
+/// # Example
+/// ```
+/// use auth0_management::UserPermissionsDelete;
+///
+/// async fn delete_permissions() {
+///   UserPermissionsDelete::new("USER_ID")
+///     .permissions(Vec::new());
+/// }
+/// ```
+pub struct UserPermissionsDelete {
   id: String,
   permissions: Vec<Permission>,
 }
 
-impl DeleteUserPermissions {
+impl UserPermissionsDelete {
   /// Create permission delete request.
   ///
   /// # Arguments
@@ -55,7 +55,7 @@ impl DeleteUserPermissions {
   }
 }
 
-impl Auth0Request for DeleteUserPermissions {
+impl Auth0Request for UserPermissionsDelete {
   type Response = ();
 
   fn build<F>(&self, factory: F) -> RequestBuilder

@@ -1,19 +1,24 @@
+//! Retrieve user details. A list of fields to include or exclude may also be specified.
 use reqwest::{Method, RequestBuilder};
 use serde::de::DeserializeOwned;
 use serde::export::PhantomData;
 
-use crate::api::users::User;
 use crate::request::Auth0Request;
+use crate::users::User;
 
-/// Provides data used to request user from user_id field.
-pub struct GetUser<AppMetadata, UserMetadata> {
+/// Retrieve user details. A list of fields to include or exclude may also be specified.
+///
+/// # Scopes
+/// * `read:users`
+/// * `read:user_idp_tokens`
+pub struct UserGet<AppMetadata, UserMetadata> {
   id: String,
 
   app_metadata: PhantomData<AppMetadata>,
   user_metadata: PhantomData<UserMetadata>,
 }
 
-impl<AppMetadata, UserMetadata> GetUser<AppMetadata, UserMetadata> {
+impl<AppMetadata, UserMetadata> UserGet<AppMetadata, UserMetadata> {
   /// Create get user request.
   /// # Arguments
   /// * `id` - The ID of the user to retrieve.
@@ -27,7 +32,7 @@ impl<AppMetadata, UserMetadata> GetUser<AppMetadata, UserMetadata> {
 }
 
 impl<AppMetadata: DeserializeOwned, UserMetadata: DeserializeOwned> Auth0Request
-  for GetUser<AppMetadata, UserMetadata>
+  for UserGet<AppMetadata, UserMetadata>
 {
   type Response = User<AppMetadata, UserMetadata>;
 

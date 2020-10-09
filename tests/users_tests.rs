@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use auth0_management::{
-  FindUsers, GetUserEnrollments, GetUserLogs, GetUserPermissions, Ordering, PagedBuilder,
+  GetUserEnrollments, Ordering, PagedBuilder, UserLogsGet, UserPermissionsGet, UsersFind,
 };
 
 use crate::helpers::get_client;
@@ -19,7 +19,7 @@ async fn test_find_user() {
   let mut client = get_client();
   let users = client
     .query(
-      FindUsers::<AppData, UserData>::new() //
+      UsersFind::<AppData, UserData>::new() //
         .sort("username", Ordering::Ascending)
         .page(0)
         .per_page(10),
@@ -28,7 +28,7 @@ async fn test_find_user() {
     .unwrap();
 
   let logs = client
-    .query(GetUserLogs::from(users.first().unwrap()).per_page(100))
+    .query(UserLogsGet::from(users.first().unwrap()).per_page(100))
     .await
     .unwrap();
 
@@ -38,7 +38,7 @@ async fn test_find_user() {
     .unwrap();
 
   let permissions = client
-    .query(&GetUserPermissions::from(users.first().unwrap()))
+    .query(&UserPermissionsGet::from(users.first().unwrap()))
     .await
     .unwrap();
 
