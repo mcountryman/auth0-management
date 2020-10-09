@@ -1,12 +1,13 @@
+use std::ops::{Deref, DerefMut};
+
 use reqwest::{Method, RequestBuilder};
 use serde::de::DeserializeOwned;
 use serde::export::PhantomData;
 use serde::Serialize;
 
-use crate::api::page::{Ordering, Page, PagedBuilder, Sort};
+use crate::api::page::Page;
 use crate::api::users::{EmptyAppMetadata, EmptyUserMetadata, User};
 use crate::request::Auth0Request;
-use std::ops::{Deref, DerefMut};
 
 /// Provide data to find users.
 #[derive(Serialize)]

@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize, Serializer};
 use std::ops::DerefMut;
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Serialize)]
 pub enum Ordering {
   Ascending = -1,
   Descending = 1,
@@ -28,7 +28,6 @@ pub struct Page {
   #[serde(rename = "per_page")]
   #[serde(skip_serializing_if = "Option::is_none")]
   pub page_size: Option<u32>,
-  #[serde(flatten)]
   #[serde(skip_serializing_if = "Option::is_none")]
   pub sort: Option<Sort>,
 }

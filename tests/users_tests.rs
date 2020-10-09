@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use auth0_management::{FindUsers, Ordering, PagedBuilder};
+use auth0_management::{FindUsers, GetUserLogs, Ordering, PagedBuilder};
 
 use crate::helpers::get_client;
 
@@ -22,6 +22,11 @@ async fn test_find_user() {
         .page(0)
         .per_page(10),
     )
+    .await
+    .unwrap();
+
+  let logs = client
+    .query(GetUserLogs::from(users.first().unwrap()).per_page(100))
     .await
     .unwrap();
 

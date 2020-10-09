@@ -7,12 +7,14 @@ pub use create::*;
 pub use delete::*;
 pub use find::*;
 pub use get::*;
+pub use logs::*;
 pub use update::*;
 
 pub mod create;
 pub mod delete;
 pub mod find;
 pub mod get;
+pub mod logs;
 pub mod update;
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -53,7 +55,7 @@ pub struct User<AppMetadata = EmptyAppMetadata, UserMetadata = EmptyUserMetadata
   pub nickname: String,
 
   /// List of multi-factor authentication providers with which this user has enrolled.
-  pub multifactor: Vec<String>,
+  pub multifactor: Option<Vec<String>>,
   /// Last IP address from which this user logged in.
   pub last_ip: Option<String>,
   /// Last date and time this user logged in.
