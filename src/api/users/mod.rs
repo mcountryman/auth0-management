@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 
 pub use create::*;
 pub use delete::*;
+pub use enrollments::*;
 pub use find::*;
 pub use get::*;
 pub use logs::*;
@@ -12,6 +13,7 @@ pub use update::*;
 
 pub mod create;
 pub mod delete;
+pub mod enrollments;
 pub mod find;
 pub mod get;
 pub mod logs;

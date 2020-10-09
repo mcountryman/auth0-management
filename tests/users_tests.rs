@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
 
-use auth0_management::{FindUsers, GetUserLogs, Ordering, PagedBuilder};
+use auth0_management::{
+  FindUsers, GetUserEnrollments, GetUserLogs, Ordering, PagedBuilder,
+};
 
 use crate::helpers::get_client;
 
@@ -30,9 +32,10 @@ async fn test_find_user() {
     .await
     .unwrap();
 
-  for user in users {
-    println!("{:?}", user);
-  }
+  let enrollments = client
+    .query(&GetUserEnrollments::from(users.first().unwrap()))
+    .await
+    .unwrap();
 }
 
 // #[tokio::test]
