@@ -3,6 +3,7 @@
 //!
 //! # Scopes
 //! * `read:users`
+//!
 //! # Example
 //! ```
 //! async fn dump_enrollments() {}

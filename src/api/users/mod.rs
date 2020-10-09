@@ -9,6 +9,7 @@ pub use enrollments::*;
 pub use find::*;
 pub use get::*;
 pub use logs::*;
+pub use permissions::*;
 pub use update::*;
 
 pub mod create;
@@ -17,6 +18,7 @@ pub mod enrollments;
 pub mod find;
 pub mod get;
 pub mod logs;
+pub mod permissions;
 pub mod update;
 
 #[derive(Serialize, Deserialize, Debug)]
