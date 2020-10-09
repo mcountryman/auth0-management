@@ -7,25 +7,12 @@
 //! ```
 //! async fn dump_permissions() {}
 //! ```
-use crate::request::Auth0Request;
-use crate::{Page, User};
-use reqwest::{Method, RequestBuilder};
-use serde::Deserialize;
 use std::ops::{Deref, DerefMut};
 
-/// User permission.
-#[derive(Debug, Clone, Deserialize)]
-pub struct Permission {
-  /// Name of this permission.
-  #[serde(rename = "permission_name")]
-  pub name: String,
-  /// Description of this permission.
-  pub description: String,
-  /// Resource server (API) name this permission is for.
-  pub resource_server_name: String,
-  /// Resource server (API) identifier that this permission is for.
-  pub resource_server_identifier: String,
-}
+use reqwest::{Method, RequestBuilder};
+
+use crate::request::Auth0Request;
+use crate::{Page, User};
 
 /// Provides data for get user permissions request.
 pub struct GetUserPermissions {
