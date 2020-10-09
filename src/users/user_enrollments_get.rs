@@ -5,7 +5,7 @@ use chrono::{DateTime, Utc};
 use reqwest::{Method, RequestBuilder};
 use serde::Deserialize;
 
-use crate::request::Auth0Request;
+use crate::Auth0Request;
 use crate::User;
 
 /// Retrieve the first confirmed [Guardian](https://auth0

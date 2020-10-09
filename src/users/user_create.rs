@@ -1,6 +1,6 @@
 //! Create a new user.
-use crate::request::Auth0Request;
 use crate::users::{EmptyAppMetadata, EmptyUserMetadata, User};
+use crate::Auth0Request;
 use reqwest::{Method, RequestBuilder};
 use serde::de::DeserializeOwned;
 use serde::Serialize;

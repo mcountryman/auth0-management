@@ -1,6 +1,6 @@
 //! Assign permissions to a user.
 
-use crate::request::Auth0Request;
+use crate::Auth0Request;
 use crate::Permission;
 use reqwest::{Method, RequestBuilder};
 
@@ -66,8 +66,8 @@ impl Auth0Request for UserPermissionsUpdate {
 
 #[cfg(test)]
 mod tests {
-  use crate::request::Auth0Request;
-  use crate::{UserPermissionsUpdate, Permission};
+  use crate::Auth0Request;
+  use crate::{Permission, UserPermissionsUpdate};
   use reqwest::Client;
 
   #[test]

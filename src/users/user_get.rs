@@ -3,8 +3,8 @@ use reqwest::{Method, RequestBuilder};
 use serde::de::DeserializeOwned;
 use serde::export::PhantomData;
 
-use crate::request::Auth0Request;
 use crate::users::User;
+use crate::Auth0Request;
 
 /// Retrieve user details. A list of fields to include or exclude may also be specified.
 ///

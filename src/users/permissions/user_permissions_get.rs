@@ -3,7 +3,7 @@ use std::ops::{Deref, DerefMut};
 
 use reqwest::{Method, RequestBuilder};
 
-use crate::request::Auth0Request;
+use crate::Auth0Request;
 use crate::{Page, Permission, User};
 
 /// Provides data for get user permissions request.

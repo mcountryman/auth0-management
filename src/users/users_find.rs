@@ -4,8 +4,8 @@ use serde::de::DeserializeOwned;
 use serde::export::PhantomData;
 use serde::Serialize;
 
-use crate::request::Auth0Request;
 use crate::users::{EmptyAppMetadata, EmptyUserMetadata, User};
+use crate::Auth0Request;
 use crate::{Page, Sort};
 
 /// Retrieve details of users. It is possible to:

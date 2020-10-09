@@ -1,7 +1,7 @@
 //! Delete a user.
 use reqwest::{Method, RequestBuilder};
 
-use crate::request::Auth0Request;
+use crate::Auth0Request;
 
 /// Delete a user.
 ///

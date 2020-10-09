@@ -2,8 +2,8 @@
 use reqwest::{Method, RequestBuilder};
 use serde::Serialize;
 
-use crate::request::Auth0Request;
 use crate::users::{EmptyAppMetadata, EmptyUserMetadata, User};
+use crate::Auth0Request;
 use serde::de::DeserializeOwned;
 
 /// Update a user.

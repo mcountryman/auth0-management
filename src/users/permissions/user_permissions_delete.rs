@@ -2,7 +2,7 @@
 
 use reqwest::{Method, RequestBuilder};
 
-use crate::request::Auth0Request;
+use crate::Auth0Request;
 use crate::Permission;
 
 /// Provides data for creating delete user permission request.

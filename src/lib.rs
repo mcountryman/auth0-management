@@ -1,10 +1,12 @@
 #![warn(missing_docs)]
 //! Unofficial Auth0 Management API
 
+use std::borrow::Borrow;
 use std::error::Error;
 use std::fmt::{Display, Formatter};
 
-use reqwest::Client;
+use reqwest::{Client, Method, RequestBuilder};
+use serde::de::DeserializeOwned;
 use serde::export::fmt::Debug;
 use serde::Deserialize;
 
@@ -15,10 +17,8 @@ pub use sort::*;
 pub use users::*;
 
 use crate::rate::{RateLimit, RateLimitError, RateLimitResponse};
-use crate::request::Auth0Request;
 use crate::token::{TokenError, TokenManager};
 
-pub mod request;
 pub mod sort;
 
 #[allow(missing_docs)]
@@ -46,7 +46,7 @@ impl Auth0 {
   /// Query API
   pub async fn query<R>(&mut self, req: &R) -> Result<R::Response, Auth0Error>
   where
-    R: Auth0Request,
+    R: Auth0Request + ?Sized,
   {
     let token = self.token.get_token().await?;
     let res = req
@@ -227,3 +227,11 @@ impl Display for Auth0BuilderError {
 }
 
 impl Error for Auth0BuilderError {}
+
+pub trait Auth0Request {
+  type Response: DeserializeOwned;
+
+  fn build<F>(&self, factory: F) -> RequestBuilder
+  where
+    F: FnOnce(Method, &str) -> RequestBuilder;
+}

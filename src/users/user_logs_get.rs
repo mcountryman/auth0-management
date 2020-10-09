@@ -4,7 +4,7 @@ use reqwest::{Method, RequestBuilder};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use crate::request::Auth0Request;
+use crate::Auth0Request;
 use crate::{Page, Sort, User};
 
 /// User log event.
