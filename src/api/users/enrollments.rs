@@ -14,7 +14,7 @@ use reqwest::{Method, RequestBuilder};
 use serde::Deserialize;
 
 use crate::request::Auth0Request;
-use crate::{EmptyAppMetadata, EmptyUserMetadata, User};
+use crate::User;
 
 /// User enrollment.
 #[derive(Debug, Clone, Deserialize)]

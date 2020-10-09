@@ -14,13 +14,11 @@
 //! ```
 
 use reqwest::{Method, RequestBuilder};
-use serde::Serialize;
 
 use crate::request::Auth0Request;
 use crate::Permission;
 
 /// Provides data for creating delete user permission request.
-#[derive(Serialize)]
 pub struct DeleteUserPermissions {
   id: String,
   permissions: Vec<Permission>,
@@ -68,6 +66,6 @@ impl Auth0Request for DeleteUserPermissions {
       Method::DELETE,
       &format!("api/v2/users/{}/permissions", self.id),
     )
-    .json(self)
+    .json(&self.permissions)
   }
 }

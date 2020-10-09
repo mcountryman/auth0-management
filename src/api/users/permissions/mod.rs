@@ -1,8 +1,10 @@
 use serde::{Deserialize, Serialize};
 
+pub use assign::*;
 pub use delete::*;
 pub use get::*;
 
+pub mod assign;
 pub mod delete;
 pub mod get;
 

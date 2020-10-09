@@ -1,5 +1,6 @@
-use serde::{Deserialize, Serialize, Serializer};
 use std::ops::DerefMut;
+
+use serde::{Serialize, Serializer};
 
 #[derive(Copy, Clone, Serialize)]
 pub enum Ordering {
