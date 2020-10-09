@@ -1,7 +1,8 @@
 use serde::{Deserialize, Serialize};
 
 use auth0_management::{
-  GetUserEnrollments, Ordering, PagedBuilder, UserLogsGet, UserPermissionsGet, UsersFind,
+  GetUserEnrollments, Ordering, Pageable, Sortable, UserLogsGet, UserPermissionsGet,
+  UsersFind,
 };
 
 use crate::helpers::get_client;

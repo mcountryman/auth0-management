@@ -11,13 +11,15 @@ use serde::Deserialize;
 #[doc(inline)]
 pub use api::*;
 pub use page::*;
+pub use sort::*;
 pub use users::*;
 
 use crate::rate::{RateLimit, RateLimitError, RateLimitResponse};
 use crate::request::Auth0Request;
 use crate::token::{TokenError, TokenManager};
 
-mod request;
+pub mod request;
+pub mod sort;
 
 #[allow(missing_docs)]
 pub mod api;

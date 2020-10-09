@@ -1,13 +1,11 @@
 //! Retrieve log events for a specific user.
-use std::ops::{Deref, DerefMut};
-
 use chrono::{DateTime, Utc};
 use reqwest::{Method, RequestBuilder};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::request::Auth0Request;
-use crate::{Page, User};
+use crate::{Page, Sort, User};
 
 /// User log event.
 #[derive(Debug, Deserialize)]
@@ -99,7 +97,7 @@ pub struct UserLogLocationInfo {
 ///
 /// # Example
 /// ```
-/// use auth0_management::{Auth0, User, UserLogsGet, Ordering, PagedBuilder};
+/// use auth0_management::{Auth0, User, UserLogsGet, Ordering, Pageable};
 ///  
 /// async fn dump_logs(client: &mut Auth0, user: &User) {
 ///   let logs = client.query(
@@ -114,9 +112,14 @@ pub struct UserLogLocationInfo {
 ///   }
 /// }
 /// ```
+#[derive(Serialize)]
 pub struct UserLogsGet {
+  #[serde(skip)]
   id: String,
+  #[serde(flatten)]
   page: Page,
+  #[serde(skip_serializing_if = "Sort::is_emtpy")]
+  sort: Sort,
 }
 
 impl UserLogsGet {
@@ -125,33 +128,26 @@ impl UserLogsGet {
     Self {
       id: id.to_owned(),
       page: Default::default(),
+      sort: Default::default(),
     }
-  }
-}
-
-impl Deref for UserLogsGet {
-  type Target = Page;
-
-  fn deref(&self) -> &Self::Target {
-    &self.page
-  }
-}
-
-impl DerefMut for UserLogsGet {
-  fn deref_mut(&mut self) -> &mut Self::Target {
-    &mut self.page
-  }
-}
-
-impl<A, U> From<User<A, U>> for UserLogsGet {
-  fn from(user: User<A, U>) -> Self {
-    Self::new(&user.user_id)
   }
 }
 
 impl<A, U> From<&User<A, U>> for UserLogsGet {
   fn from(user: &User<A, U>) -> Self {
-    Self::new(&user.user_id)
+    UserLogsGet::new(&user.user_id)
+  }
+}
+
+impl AsMut<Page> for UserLogsGet {
+  fn as_mut(&mut self) -> &mut Page {
+    &mut self.page
+  }
+}
+
+impl AsMut<Sort> for UserLogsGet {
+  fn as_mut(&mut self) -> &mut Sort {
+    &mut self.sort
   }
 }
 
@@ -162,6 +158,6 @@ impl Auth0Request for UserLogsGet {
   where
     F: FnOnce(Method, &str) -> RequestBuilder,
   {
-    factory(Method::GET, &format!("api/v2/users/{}/logs", self.id))
+    factory(Method::GET, &format!("api/v2/users/{}/logs", self.id)).query(&self)
   }
 }

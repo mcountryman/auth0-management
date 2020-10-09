@@ -3,11 +3,10 @@ use reqwest::{Method, RequestBuilder};
 use serde::de::DeserializeOwned;
 use serde::export::PhantomData;
 use serde::Serialize;
-use std::ops::{Deref, DerefMut};
 
 use crate::request::Auth0Request;
 use crate::users::{EmptyAppMetadata, EmptyUserMetadata, User};
-use crate::Page;
+use crate::{Page, Sort};
 
 /// Retrieve details of users. It is possible to:
 ///
@@ -36,29 +35,35 @@ use crate::Page;
 pub struct UsersFind<AppMetadata = EmptyAppMetadata, UserMetadata = EmptyUserMetadata> {
   #[serde(flatten)]
   page: Page,
+  #[serde(skip_serializing_if = "Sort::is_emtpy")]
+  sort: Sort,
 
   app_metadata: PhantomData<AppMetadata>,
   user_metadata: PhantomData<UserMetadata>,
 }
 
-impl<AppMetadata, UserMetadata> UsersFind<AppMetadata, UserMetadata> {
+impl<A, U> UsersFind<A, U> {
   /// Create find users request.
   pub fn new() -> Self {
-    Default::default()
+    Self {
+      page: Default::default(),
+      sort: Default::default(),
+
+      app_metadata: Default::default(),
+      user_metadata: Default::default(),
+    }
   }
 }
 
-impl<AppMetadata, UserMetadata> Deref for UsersFind<AppMetadata, UserMetadata> {
-  type Target = Page;
-
-  fn deref(&self) -> &Self::Target {
-    &self.page
-  }
-}
-
-impl<AppMetadata, UserMetadata> DerefMut for UsersFind<AppMetadata, UserMetadata> {
-  fn deref_mut(&mut self) -> &mut Self::Target {
+impl<AppMetadata, UserMetadata> AsMut<Page> for UsersFind<AppMetadata, UserMetadata> {
+  fn as_mut(&mut self) -> &mut Page {
     &mut self.page
+  }
+}
+
+impl<AppMetadata, UserMetadata> AsMut<Sort> for UsersFind<AppMetadata, UserMetadata> {
+  fn as_mut(&mut self) -> &mut Sort {
+    &mut self.sort
   }
 }
 
@@ -66,6 +71,7 @@ impl<AppMetadata, UserMetadata> Default for UsersFind<AppMetadata, UserMetadata>
   fn default() -> Self {
     Self {
       page: Default::default(),
+      sort: Default::default(),
 
       app_metadata: Default::default(),
       user_metadata: Default::default(),
