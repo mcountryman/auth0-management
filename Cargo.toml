@@ -3,7 +3,7 @@ name = "auth0-management"
 version = "0.0.3"
 authors = ["Marvin Countryman <me@maar.vin>"]
 edition = "2018"
-description = "Auth0 management client API"
+description = "An unofficial client for Auth0 Management API."
 
 readme = "./README.md"
 license = "MIT"
