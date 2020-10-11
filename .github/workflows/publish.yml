@@ -54,7 +54,7 @@ jobs:
             ${{ runner.os }}-
 
       - name: publish
-        run: cargo release --no-confirm --skip-push patch
+        run: cargo release --no-confirm --skip-push
 
       - name: publish git tag
         uses: ad-m/github-push-action@master
