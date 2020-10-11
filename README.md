@@ -11,7 +11,9 @@
   </a>
 </p>
 
-An unofficial client for Auth0 Management API.
+An in-progress unofficial rust client for Auth0 Management API.  Full implementation of 
+the API is coming.  If you would like to help out, please see 
+[CONTRIBUTING.md](CONTRIBUTING.md).
 
 ### Documentation
 * [docs.rs](https://docs.rs/auth0-management/0.0.3)
@@ -57,9 +59,6 @@ An unofficial client for Auth0 Management API.
     * [ ] Identities
     * [ ] Links
     * [ ] Invalidate all remembered browsers for MFA
-
-### Contact
-Shoot me an email at [me@maar.vin](mailto://me@maar.vin).
 
 ### License
 * [MIT](LICENSE.md)
