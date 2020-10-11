@@ -13,11 +13,53 @@
 
 An unofficial client for Auth0 Management API.
 
-### Quick start
-TODO.
+### Documentation
+* [docs.rs](https://docs.rs/auth0-management/0.0.3)
+* [auth0.com](https://auth0.com/docs/api)
+
+### Roadmap
+* [ ] Anomalies
+* [ ] Blacklists
+* [ ] Branding
+* [ ] Client Grants
+* [ ] Clients
+* [ ] Connections
+* [ ] Custom Domains
+* [ ] Device Credentials
+* [ ] Email Templates
+* [ ] Emails
+* [ ] Grants
+* [ ] Guardians
+* [ ] Hooks
+* [ ] Jobs
+* [ ] Keys
+* [ ] Log Streams
+* [ ] Logs
+* [ ] Keys
+* [ ] Log Streams
+* [ ] Logs
+* [ ] Prompts
+* [ ] Resource Servers
+* [ ] Roles
+* [ ] Rules
+* [ ] Rules Configs
+* [ ] Stats
+* [ ] Tenants
+* [ ] Tickets
+* [ ] User Blocks
+* [ ] Users
+    * [x] CRUD
+    * [x] Search
+    * [x] Logs
+    * [x] Permissions
+    * [ ] Roles
+    * [x] Enrollments
+    * [ ] Identities
+    * [ ] Links
+    * [ ] Invalidate all remembered browsers for MFA
 
 ### Contact
 Shoot me an email at [me@maar.vin](mailto://me@maar.vin).
 
 ### License
-MIT - [LICENSE.md](LICENSE.md)
+* [MIT](LICENSE.md)
