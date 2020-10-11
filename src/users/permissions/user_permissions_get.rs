@@ -3,7 +3,7 @@ use std::ops::{Deref, DerefMut};
 
 use reqwest::{Method, RequestBuilder};
 
-use crate::Auth0Request;
+use crate::RelativeRequestBuilder;
 use crate::{Page, Permission, User};
 
 /// Provides data for get user permissions request.
@@ -56,7 +56,7 @@ impl<A, U> From<&User<A, U>> for UserPermissionsGet {
   }
 }
 
-impl Auth0Request for UserPermissionsGet {
+impl RelativeRequestBuilder for UserPermissionsGet {
   type Response = Vec<Permission>;
 
   fn build<F>(&self, factory: F) -> RequestBuilder

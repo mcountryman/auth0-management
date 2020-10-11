@@ -4,7 +4,7 @@ use reqwest::{Method, RequestBuilder};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use crate::Auth0Request;
+use crate::RelativeRequestBuilder;
 use crate::{Page, Sort, User};
 
 /// User log event.
@@ -97,9 +97,9 @@ pub struct UserLogLocationInfo {
 ///
 /// # Example
 /// ```
-/// use auth0_management::{Auth0, User, UserLogsGet, Ordering, Pageable};
+/// use auth0_management::{Auth0, User, UserLogsGet, Ordering, Pageable, Sortable};
 ///  
-/// async fn dump_logs(client: &mut Auth0, user: &User) {
+/// async fn dump_logs<A, U>(client: &mut Auth0, user: &User<A, U>) {
 ///   let logs = client.query(
 ///     UserLogsGet::from(user)
 ///       .sort("date", Ordering::Ascending)
@@ -151,7 +151,7 @@ impl AsMut<Sort> for UserLogsGet {
   }
 }
 
-impl Auth0Request for UserLogsGet {
+impl RelativeRequestBuilder for UserLogsGet {
   type Response = Vec<UserLog>;
 
   fn build<F>(&self, factory: F) -> RequestBuilder

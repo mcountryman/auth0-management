@@ -4,8 +4,8 @@ use serde::de::DeserializeOwned;
 use serde::export::PhantomData;
 use serde::Serialize;
 
-use crate::users::{EmptyAppMetadata, EmptyUserMetadata, User};
-use crate::Auth0Request;
+use crate::users::User;
+use crate::RelativeRequestBuilder;
 use crate::{Page, Sort};
 
 /// Retrieve details of users. It is possible to:
@@ -32,7 +32,7 @@ use crate::{Page, Sort};
 /// * `read:users`
 /// * `read:user_idp_tokens`
 #[derive(Serialize)]
-pub struct UsersFind<AppMetadata = EmptyAppMetadata, UserMetadata = EmptyUserMetadata> {
+pub struct UsersFind<AppMetadata, UserMetadata> {
   #[serde(flatten)]
   page: Page,
   #[serde(skip_serializing_if = "Sort::is_emtpy")]
@@ -79,7 +79,7 @@ impl<AppMetadata, UserMetadata> Default for UsersFind<AppMetadata, UserMetadata>
   }
 }
 
-impl<AppMetadata: DeserializeOwned, UserMetadata: DeserializeOwned> Auth0Request
+impl<AppMetadata: DeserializeOwned, UserMetadata: DeserializeOwned> RelativeRequestBuilder
   for UsersFind<AppMetadata, UserMetadata>
 {
   type Response = Vec<User<AppMetadata, UserMetadata>>;

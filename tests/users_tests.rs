@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use auth0_management::{
-  GetUserEnrollments, Ordering, Pageable, Sortable, UserLogsGet, UserPermissionsGet,
+  Ordering, Pageable, Sortable, UserEnrollmentsGet, UserLogsGet, UserPermissionsGet,
   UsersFind,
 };
 
@@ -28,13 +28,13 @@ async fn test_find_user() {
     .await
     .unwrap();
 
-  let logs = client
+  let _logs = client
     .query(UserLogsGet::from(users.first().unwrap()).per_page(100))
     .await
     .unwrap();
 
-  let enrollments = client
-    .query(&GetUserEnrollments::from(users.first().unwrap()))
+  let _enrollments = client
+    .query(&UserEnrollmentsGet::from(users.first().unwrap()))
     .await
     .unwrap();
 

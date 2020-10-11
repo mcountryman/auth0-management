@@ -1,4 +1,5 @@
 #![warn(missing_docs)]
+//! User request builders.
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -29,6 +30,7 @@ pub mod user_logs_get;
 pub mod user_update;
 pub mod users_find;
 
+/// User identity.
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Identity {
   provider: String,
@@ -37,8 +39,9 @@ pub struct Identity {
   connection: String,
 }
 
+/// User
 #[derive(Deserialize, Debug)]
-pub struct User<AppMetadata = EmptyAppMetadata, UserMetadata = EmptyUserMetadata> {
+pub struct User<AppMetadata, UserMetadata> {
   /// ID of the user which can be used when interacting with other APIs.
   pub user_id: String,
   /// Email address of this user.
@@ -87,32 +90,3 @@ pub struct User<AppMetadata = EmptyAppMetadata, UserMetadata = EmptyUserMetadata
   /// User metadata to which this user has read/write access.
   pub user_metadata: Option<UserMetadata>,
 }
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct EmptyAppMetadata;
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct EmptyUserMetadata;
-
-//
-// impl<AppMetadata, UserMetadata> Into<UserUpdateOpts<AppMetadata, UserMetadata>>
-//   for User<AppMetadata, UserMetadata>
-// {
-//   fn into(self) -> UserUpdateOpts<AppMetadata, UserMetadata> {
-//     UserUpdateOpts {
-//       user_id: self.user_id,
-//       blocked: Some(self.blocked),
-//       email: Some(self.email),
-//       phone_number: self.phone_number,
-//       given_name: self.given_name,
-//       family_name: self.family_name,
-//       name: Some(self.name),
-//       nickname: Some(self.nickname),
-//       picture: Some(self.picture),
-//       verify_email: None,
-//       verify_phone_number: None,
-//       app_metadata: None,
-//       user_metadata: None,
-//     }
-//   }
-// }

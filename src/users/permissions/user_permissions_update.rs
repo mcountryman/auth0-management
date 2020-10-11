@@ -1,7 +1,7 @@
 //! Assign permissions to a user.
 
-use crate::Auth0Request;
 use crate::Permission;
+use crate::RelativeRequestBuilder;
 use reqwest::{Method, RequestBuilder};
 
 /// Assign user permissions.
@@ -49,7 +49,7 @@ impl UserPermissionsUpdate {
   }
 }
 
-impl Auth0Request for UserPermissionsUpdate {
+impl RelativeRequestBuilder for UserPermissionsUpdate {
   type Response = ();
 
   fn build<F>(&self, factory: F) -> RequestBuilder
@@ -66,7 +66,7 @@ impl Auth0Request for UserPermissionsUpdate {
 
 #[cfg(test)]
 mod tests {
-  use crate::Auth0Request;
+  use crate::RelativeRequestBuilder;
   use crate::{Permission, UserPermissionsUpdate};
   use reqwest::Client;
 

@@ -1,10 +1,10 @@
 //! Update a user.
 use reqwest::{Method, RequestBuilder};
+use serde::de::DeserializeOwned;
 use serde::Serialize;
 
-use crate::users::{EmptyAppMetadata, EmptyUserMetadata, User};
-use crate::Auth0Request;
-use serde::de::DeserializeOwned;
+use crate::users::User;
+use crate::RelativeRequestBuilder;
 
 /// Update a user.
 /// Some considerations:
@@ -26,7 +26,7 @@ use serde::de::DeserializeOwned;
 /// * `update:users`
 /// * `update:users_app_metadata`
 #[derive(Serialize)]
-pub struct UserUpdate<AppMetadata = EmptyAppMetadata, UserMetadata = EmptyUserMetadata> {
+pub struct UserUpdate<AppMetadata, UserMetadata> {
   #[serde(skip_serializing)]
   user_id: String,
   #[serde(skip_serializing_if = "Option::is_none")]
@@ -207,7 +207,7 @@ impl<AppMetadata, UserMetadata> UserUpdate<AppMetadata, UserMetadata> {
 impl<
     AppMetadata: Serialize + DeserializeOwned,
     UserMetadata: Serialize + DeserializeOwned,
-  > Auth0Request for UserUpdate<AppMetadata, UserMetadata>
+  > RelativeRequestBuilder for UserUpdate<AppMetadata, UserMetadata>
 {
   type Response = User<AppMetadata, UserMetadata>;
 

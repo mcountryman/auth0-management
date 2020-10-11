@@ -2,8 +2,8 @@
 
 use reqwest::{Method, RequestBuilder};
 
-use crate::Auth0Request;
 use crate::Permission;
+use crate::RelativeRequestBuilder;
 
 /// Provides data for creating delete user permission request.
 ///
@@ -55,7 +55,7 @@ impl UserPermissionsDelete {
   }
 }
 
-impl Auth0Request for UserPermissionsDelete {
+impl RelativeRequestBuilder for UserPermissionsDelete {
   type Response = ();
 
   fn build<F>(&self, factory: F) -> RequestBuilder

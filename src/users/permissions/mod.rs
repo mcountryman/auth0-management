@@ -1,3 +1,4 @@
+//! User permission request builders.
 use serde::{Deserialize, Serialize};
 
 pub use user_permissions_delete::*;

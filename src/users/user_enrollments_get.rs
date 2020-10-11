@@ -5,22 +5,12 @@ use chrono::{DateTime, Utc};
 use reqwest::{Method, RequestBuilder};
 use serde::Deserialize;
 
-use crate::Auth0Request;
+use crate::RelativeRequestBuilder;
 use crate::User;
 
-/// Retrieve the first confirmed [Guardian](https://auth0
-/// .com/docs/multifactor-authentication/guardian)
-/// enrollment for a user.
-///
-/// # Scopes
-/// * `read:users`
-///
-/// # Example
-/// ```
-/// async fn dump_enrollments() {}
-/// ```
+/// Multi-factor enrollment.
 #[derive(Debug, Clone, Deserialize)]
-pub struct UserEnrollmentsGet {
+pub struct UserEnrollment {
   /// ID of this enrollment.
   pub id: String,
   /// Status of this enrollment. Can be `pending` or `confirmed`.
@@ -43,32 +33,42 @@ pub struct UserEnrollmentsGet {
   pub last_auth: DateTime<Utc>,
 }
 
-/// Provides data for user enrollments request.
-pub struct GetUserEnrollments {
+/// Retrieve the first confirmed [Guardian](https://auth0
+/// .com/docs/multifactor-authentication/guardian)
+/// enrollment for a user.
+///
+/// # Scopes
+/// * `read:users`
+///
+/// # Example
+/// ```
+/// async fn dump_enrollments() {}
+/// ```
+pub struct UserEnrollmentsGet {
   id: String,
 }
 
-impl GetUserEnrollments {
+impl UserEnrollmentsGet {
   /// Create user enrollments request.
   pub fn new(id: &str) -> Self {
     Self { id: id.to_owned() }
   }
 }
 
-impl<U, A> From<User<U, A>> for GetUserEnrollments {
+impl<U, A> From<User<U, A>> for UserEnrollmentsGet {
   fn from(user: User<U, A>) -> Self {
     Self::new(&user.user_id)
   }
 }
 
-impl<U, A> From<&User<U, A>> for GetUserEnrollments {
+impl<U, A> From<&User<U, A>> for UserEnrollmentsGet {
   fn from(user: &User<U, A>) -> Self {
     Self::new(&user.user_id)
   }
 }
 
-impl Auth0Request for GetUserEnrollments {
-  type Response = Vec<UserEnrollmentsGet>;
+impl RelativeRequestBuilder for UserEnrollmentsGet {
+  type Response = Vec<UserEnrollment>;
 
   fn build<F>(&self, factory: F) -> RequestBuilder
   where

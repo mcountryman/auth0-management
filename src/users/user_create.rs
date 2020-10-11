@@ -1,9 +1,10 @@
 //! Create a new user.
-use crate::users::{EmptyAppMetadata, EmptyUserMetadata, User};
-use crate::Auth0Request;
 use reqwest::{Method, RequestBuilder};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
+
+use crate::users::User;
+use crate::RelativeRequestBuilder;
 
 /// Create a new user for a given [database](https://auth0.com/docs/connections/database) or
 /// [passwordless](https://auth0.com/docs/connections/passwordless) connection.
@@ -14,7 +15,7 @@ use serde::Serialize;
 /// # Scopes
 /// * `create:users`
 #[derive(Serialize)]
-pub struct UserCreate<AppMetadata = EmptyAppMetadata, UserMetadata = EmptyUserMetadata> {
+pub struct UserCreate<AppMetadata, UserMetadata> {
   #[serde(skip_serializing_if = "Option::is_none")]
   email: Option<String>,
   #[serde(skip_serializing_if = "Option::is_none")]
@@ -192,7 +193,7 @@ impl<AppMetadata, UserMetadata> Default for UserCreate<AppMetadata, UserMetadata
 impl<
     AppMetadata: Serialize + DeserializeOwned,
     UserMetadata: Serialize + DeserializeOwned,
-  > Auth0Request for UserCreate<AppMetadata, UserMetadata>
+  > RelativeRequestBuilder for UserCreate<AppMetadata, UserMetadata>
 {
   type Response = User<AppMetadata, UserMetadata>;
 

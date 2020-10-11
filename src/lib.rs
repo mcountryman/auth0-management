@@ -1,7 +1,6 @@
 #![warn(missing_docs)]
 //! Unofficial Auth0 Management API
 
-use std::borrow::Borrow;
 use std::error::Error;
 use std::fmt::{Display, Formatter};
 
@@ -46,7 +45,7 @@ impl Auth0 {
   /// Query API
   pub async fn query<R>(&mut self, req: &R) -> Result<R::Response, Auth0Error>
   where
-    R: Auth0Request + ?Sized,
+    R: RelativeRequestBuilder + ?Sized,
   {
     let token = self.token.get_token().await?;
     let res = req
@@ -162,11 +161,16 @@ impl Default for Auth0Builder {
   }
 }
 
+/// The error returned when querying Auth0.
 #[derive(Debug)]
 pub enum Auth0Error {
+  /// Generic http error.
   Http(reqwest::Error),
+  /// Authentication token error.
   Token(TokenError),
+  /// Auth0 server side error.
   Auth0(String),
+  /// Auth0 rate limit error.
   RateLimit(RateLimitError),
 }
 
@@ -196,6 +200,7 @@ impl From<RateLimitError> for Auth0Error {
   }
 }
 
+/// Auth0 error response.
 #[derive(Deserialize)]
 pub struct Auth0ErrorResponse {
   message: String,
@@ -228,9 +233,15 @@ impl Display for Auth0BuilderError {
 
 impl Error for Auth0BuilderError {}
 
-pub trait Auth0Request {
+/// Builds request without absolute URI.
+pub trait RelativeRequestBuilder {
+  /// The response type.
   type Response: DeserializeOwned;
 
+  /// Build relative request.
+  ///
+  /// # Arguments
+  /// * `factory` - The absolute request builder factory.
   fn build<F>(&self, factory: F) -> RequestBuilder
   where
     F: FnOnce(Method, &str) -> RequestBuilder;
