@@ -1,7 +1,13 @@
 on:
+<<<<<<< HEAD
+=======
+  push:
+    branches-ignore:
+      - 'master'
+>>>>>>> b7b79f789524f7cbfbdd7b5acebf38b7d3c83ff3
   pull_request:
-    branches:
-      - !master
+    branches-ignore:
+      - 'master'
 
 name: test
 
@@ -17,6 +23,15 @@ jobs:
           profile: minimal
           toolchain: stable
           override: true
+
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ~/.cargo/bin
+            target
+          key: ${{ runner.os }}-lint-${{ hashFiles('**/Cargo.lock') }}
 
       # this is cheaper than requesting the non-minimal profile
       - run: rustup component add rustfmt
@@ -53,8 +68,9 @@ jobs:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
+            ~/.cargo/bin
             target
-          key: ${{ runner.os }}-test-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-unit-${{ hashFiles('**/Cargo.lock') }}
 
       - name: test
         uses: actions-rs/cargo@v1

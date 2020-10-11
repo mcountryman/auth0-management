@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+/// Connection
 #[derive(Serialize, Deserialize)]
 pub struct Connection {
   /// The connection's identifier.

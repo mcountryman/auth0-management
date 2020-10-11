@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 
+#[allow(missing_docs)]
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
 pub enum Strategy {
   #[serde(alias = "ad")]
