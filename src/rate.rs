@@ -1,23 +1,3 @@
-//! Provides ability to read rate limit headers and check if limits are exceeded.
-//! # Examples
-//! ```
-//! use std::error::Error;
-//! use reqwest::Client;
-//! use auth0_management::rate::{RateLimit, RateLimitResponse};
-//!
-//! async fn request_thing(client: &Client, limit: &mut RateLimit) {
-//!   if !limit.check_limit() {
-//!     panic!("Rate limit exceeded!");
-//!   }
-//!
-//!   client
-//!     .get("https://example.com")
-//!     .send()
-//!     .await
-//!     .unwrap()
-//!     .rate_limit(limit);
-//! }
-//! ```
 use std::error::Error;
 use std::num::ParseIntError;
 use std::time::{Duration, SystemTime};
@@ -89,17 +69,11 @@ impl RateLimit {
 }
 
 pub trait RateLimitResponse: Sized {
-  fn rate_limit(
-    self,
-    rate_limit: &mut RateLimit,
-  ) -> Result<Self, Box<dyn Error + Send + Sync>>;
+  fn rate_limit(self, rate_limit: &mut RateLimit) -> Result<Self, RateLimitError>;
 }
 
 impl RateLimitResponse for Response {
-  fn rate_limit(
-    self,
-    rate_limit: &mut RateLimit,
-  ) -> Result<Self, Box<dyn Error + Send + Sync>> {
+  fn rate_limit(self, rate_limit: &mut RateLimit) -> Result<Self, RateLimitError> {
     rate_limit.read(&self)?;
     Ok(self)
   }

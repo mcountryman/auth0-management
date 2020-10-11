@@ -21,6 +21,15 @@ jobs:
           toolchain: stable
           override: true
 
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ~/.cargo/bin
+            target
+          key: ${{ runner.os }}-release-${{ hashFiles('**/Cargo.lock') }}
+
       # this is cheaper than requesting the non-minimal profile
       - run: rustup component add rustfmt
       - run: rustup component add clippy
@@ -33,6 +42,19 @@ jobs:
           cargo install cargo-release
         env:
           CRATES_TOKEN: ${{ secrets.CRATES_TOKEN }}
+
+      - name: Cache node modules
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-cargo
+        with:
+          # npm cache files are stored in `~/.npm` on Linux/macOS
+          path: ~/.cargo/bin
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}-
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
 
       - name: publish
         run: cargo release --no-confirm --skip-push patch
