@@ -1,10 +1,7 @@
 on:
-<<<<<<< HEAD
-=======
   push:
-    branches-ignore:
-      - 'master'
->>>>>>> b7b79f789524f7cbfbdd7b5acebf38b7d3c83ff3
+    branches:
+      - *
   pull_request:
     branches-ignore:
       - 'master'
