@@ -6,7 +6,7 @@ on:
     branches-ignore:
       - 'master'
 
-name: test
+name: build
 
 jobs:
   lint:
