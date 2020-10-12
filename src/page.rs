@@ -2,7 +2,7 @@
 use serde::Serialize;
 
 /// Provides serializable pagination parameters.
-#[derive(Serialize)]
+#[derive(Clone, Debug, Serialize)]
 pub struct Page {
   #[serde(skip_serializing_if = "Option::is_none")]
   page: Option<u32>,

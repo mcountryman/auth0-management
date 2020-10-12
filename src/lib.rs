@@ -12,6 +12,7 @@ use serde::Deserialize;
 #[doc(inline)]
 pub use api::*;
 pub use page::*;
+pub use roles::*;
 pub use sort::*;
 pub use users::*;
 
@@ -25,6 +26,7 @@ pub mod api;
 pub mod page;
 #[doc(hidden)]
 pub mod rate;
+pub mod roles;
 #[doc(hidden)]
 pub mod token;
 pub mod users;
