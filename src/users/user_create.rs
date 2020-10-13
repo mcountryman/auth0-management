@@ -8,12 +8,6 @@ use crate::{Auth0Client, Auth0RequestBuilder};
 
 /// Create a new user for a given [database](https://auth0.com/docs/connections/database) or
 /// [passwordless](https://auth0.com/docs/connections/passwordless) connection.
-///
-/// Note: connection is required but other parameters such as email and password are dependent
-/// upon the type of connection.
-///
-/// # Scopes
-/// * `create:users`
 #[derive(Serialize)]
 pub struct UserCreate<'a, A, U> {
   #[serde(skip_serializing)]

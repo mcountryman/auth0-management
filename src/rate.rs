@@ -10,9 +10,9 @@ use std::sync::atomic::{AtomicU32, AtomicU64, Ordering};
 
 /// Provides ability to read rate limit headers and check if limits are exceeded.
 pub struct RateLimit {
-  pub limit: AtomicU32,
-  pub reset: AtomicU64,
-  pub remaining: AtomicU32,
+  limit: AtomicU32,
+  reset: AtomicU64,
+  remaining: AtomicU32,
 }
 
 impl RateLimit {
@@ -127,9 +127,3 @@ impl Display for RateLimitError {
 }
 
 impl Error for RateLimitError {}
-
-#[cfg(test)]
-mod tests {
-  #[test]
-  fn test_rate_limit() {}
-}
