@@ -1,7 +1,7 @@
 //! Delete a user.
 use reqwest::{Method, RequestBuilder};
 
-use crate::RelativeRequestBuilder;
+use crate::Auth0RequestBuilder;
 
 /// Delete a user.
 ///
@@ -19,7 +19,7 @@ impl UserDelete {
   }
 }
 
-impl RelativeRequestBuilder for UserDelete {
+impl Auth0RequestBuilder for UserDelete {
   type Response = ();
 
   fn build<F>(&self, factory: F) -> RequestBuilder

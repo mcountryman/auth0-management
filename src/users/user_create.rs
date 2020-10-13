@@ -4,7 +4,7 @@ use serde::de::DeserializeOwned;
 use serde::Serialize;
 
 use crate::users::User;
-use crate::RelativeRequestBuilder;
+use crate::{Auth0, Auth0RequestBuilder};
 
 /// Create a new user for a given [database](https://auth0.com/docs/connections/database) or
 /// [passwordless](https://auth0.com/docs/connections/passwordless) connection.
@@ -15,7 +15,10 @@ use crate::RelativeRequestBuilder;
 /// # Scopes
 /// * `create:users`
 #[derive(Serialize)]
-pub struct UserCreate<AppMetadata, UserMetadata> {
+pub struct UserCreate<'a, A, U> {
+  #[serde(skip_serializing)]
+  client: &'a Auth0,
+
   #[serde(skip_serializing_if = "Option::is_none")]
   email: Option<String>,
   #[serde(skip_serializing_if = "Option::is_none")]
@@ -48,15 +51,36 @@ pub struct UserCreate<AppMetadata, UserMetadata> {
   username: Option<String>,
 
   #[serde(skip_serializing_if = "Option::is_none")]
-  app_metadata: Option<AppMetadata>,
+  app_metadata: Option<A>,
   #[serde(skip_serializing_if = "Option::is_none")]
-  user_metadata: Option<UserMetadata>,
+  user_metadata: Option<U>,
 }
 
-impl<AppMetadata, UserMetadata> UserCreate<AppMetadata, UserMetadata> {
+impl<'a, A, U> UserCreate<'a, A, U> {
   /// Create create user request.
-  pub fn new() -> Self {
-    Default::default()
+  pub fn new(client: &'a Auth0) -> Self {
+    Self {
+      client,
+      
+      email: None,
+      phone_number: None,
+      blocked: None,
+      email_verified: None,
+      phone_verified: None,
+      given_name: None,
+      family_name: None,
+      name: None,
+      nickname: None,
+      picture: None,
+      user_id: None,
+      connection: None,
+      password: None,
+      verify_email: None,
+      username: None,
+
+      app_metadata: Default::default(),
+      user_metadata: Default::default(),
+    }
   }
 
   /// The user's email.
@@ -153,49 +177,28 @@ impl<AppMetadata, UserMetadata> UserCreate<AppMetadata, UserMetadata> {
   }
 
   /// Data related to the user that does affect the application's core functionality.
-  pub fn app_metadata(&mut self, app_metadata: AppMetadata) -> &mut Self {
+  pub fn app_metadata(&mut self, app_metadata: A) -> &mut Self {
     self.app_metadata = Some(app_metadata);
     self
   }
 
   /// Data related to the user that does not affect the application's core functionality.
-  pub fn user_metadata(&mut self, user_metadata: UserMetadata) -> &mut Self {
+  pub fn user_metadata(&mut self, user_metadata: U) -> &mut Self {
     self.user_metadata = Some(user_metadata);
     self
   }
 }
 
-impl<AppMetadata, UserMetadata> Default for UserCreate<AppMetadata, UserMetadata> {
-  fn default() -> Self {
-    Self {
-      email: None,
-      phone_number: None,
-      blocked: None,
-      email_verified: None,
-      phone_verified: None,
-      given_name: None,
-      family_name: None,
-      name: None,
-      nickname: None,
-      picture: None,
-      user_id: None,
-      connection: None,
-      password: None,
-      verify_email: None,
-      username: None,
-
-      app_metadata: Default::default(),
-      user_metadata: Default::default(),
-    }
+impl<'a, A, U> AsRef<Auth0> for UserCreate<'a, A, U> {
+  fn as_ref(&self) -> &Auth0 {
+    self.client
   }
 }
 
-impl<
-    AppMetadata: Serialize + DeserializeOwned,
-    UserMetadata: Serialize + DeserializeOwned,
-  > RelativeRequestBuilder for UserCreate<AppMetadata, UserMetadata>
+impl<'a, A: Serialize + DeserializeOwned, U: Serialize + DeserializeOwned> Auth0RequestBuilder
+  for UserCreate<'a, A, U>
 {
-  type Response = User<AppMetadata, UserMetadata>;
+  type Response = User<A, U>;
 
   fn build<F>(&self, factory: F) -> RequestBuilder
   where

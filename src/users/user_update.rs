@@ -3,8 +3,8 @@ use reqwest::{Method, RequestBuilder};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
+use crate::{Auth0, Auth0RequestBuilder};
 use crate::users::User;
-use crate::RelativeRequestBuilder;
 
 /// Update a user.
 /// Some considerations:
@@ -26,7 +26,10 @@ use crate::RelativeRequestBuilder;
 /// * `update:users`
 /// * `update:users_app_metadata`
 #[derive(Serialize)]
-pub struct UserUpdate<AppMetadata, UserMetadata> {
+pub struct UserUpdate<'a, A, U> {
+  #[serde(skip_serializing)]
+  client: &'a Auth0,
+
   #[serde(skip_serializing)]
   user_id: String,
   #[serde(skip_serializing_if = "Option::is_none")]
@@ -61,15 +64,17 @@ pub struct UserUpdate<AppMetadata, UserMetadata> {
   verify_phone_number: Option<bool>,
 
   #[serde(skip_serializing_if = "Option::is_none")]
-  app_metadata: Option<AppMetadata>,
+  app_metadata: Option<A>,
   #[serde(skip_serializing_if = "Option::is_none")]
-  user_metadata: Option<UserMetadata>,
+  user_metadata: Option<U>,
 }
 
-impl<AppMetadata, UserMetadata> UserUpdate<AppMetadata, UserMetadata> {
+impl<'a, A, U> UserUpdate<'a, A, U> {
   /// Create update user request.
-  pub fn new(id: &str) -> Self {
+  pub fn new(client: &'a Auth0, id: &str) -> Self {
     Self {
+      client,
+      
       user_id: id.to_owned(),
       blocked: None,
       email: None,
@@ -192,28 +197,35 @@ impl<AppMetadata, UserMetadata> UserUpdate<AppMetadata, UserMetadata> {
   }
 
   /// User metadata to which this user has read-only access.
-  pub fn app_metadata(&mut self, app_metadata: AppMetadata) -> &mut Self {
+  pub fn app_metadata(&mut self, app_metadata: A) -> &mut Self {
     self.app_metadata = Some(app_metadata);
     self
   }
 
   /// User metadata to which this user has read/write access.
-  pub fn user_metadata(&mut self, user_metadata: UserMetadata) -> &mut Self {
+  pub fn user_metadata(&mut self, user_metadata: U) -> &mut Self {
     self.user_metadata = Some(user_metadata);
     self
   }
 }
 
+impl<'a, A, U> AsRef<Auth0> for UserUpdate<'a, A, U> {
+  fn as_ref(&self) -> &Auth0 {
+    self.client
+  }
+}
+
 impl<
-    AppMetadata: Serialize + DeserializeOwned,
-    UserMetadata: Serialize + DeserializeOwned,
-  > RelativeRequestBuilder for UserUpdate<AppMetadata, UserMetadata>
+  'a,
+  A: Serialize + DeserializeOwned,
+  U: Serialize + DeserializeOwned,
+> Auth0RequestBuilder for UserUpdate<'a, A, U>
 {
-  type Response = User<AppMetadata, UserMetadata>;
+  type Response = User<A, U>;
 
   fn build<F>(&self, factory: F) -> RequestBuilder
-  where
-    F: FnOnce(Method, &str) -> RequestBuilder,
+    where
+      F: FnOnce(Method, &str) -> RequestBuilder,
   {
     factory(Method::DELETE, &format!("api/v2/users/{}", self.user_id)).json(self)
   }

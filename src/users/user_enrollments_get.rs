@@ -5,7 +5,7 @@ use chrono::{DateTime, Utc};
 use reqwest::{Method, RequestBuilder};
 use serde::Deserialize;
 
-use crate::RelativeRequestBuilder;
+use crate::Auth0RequestBuilder;
 use crate::User;
 
 /// Multi-factor enrollment.
@@ -55,19 +55,7 @@ impl UserEnrollmentsGet {
   }
 }
 
-impl<U, A> From<User<U, A>> for UserEnrollmentsGet {
-  fn from(user: User<U, A>) -> Self {
-    Self::new(&user.user_id)
-  }
-}
-
-impl<U, A> From<&User<U, A>> for UserEnrollmentsGet {
-  fn from(user: &User<U, A>) -> Self {
-    Self::new(&user.user_id)
-  }
-}
-
-impl RelativeRequestBuilder for UserEnrollmentsGet {
+impl Auth0RequestBuilder for UserEnrollmentsGet {
   type Response = Vec<UserEnrollment>;
 
   fn build<F>(&self, factory: F) -> RequestBuilder

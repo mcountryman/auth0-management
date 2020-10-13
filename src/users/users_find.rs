@@ -5,14 +5,13 @@ use serde::export::PhantomData;
 use serde::Serialize;
 
 use crate::users::User;
-use crate::RelativeRequestBuilder;
+use crate::{Auth0, Auth0RequestBuilder};
 use crate::{Page, Sort};
 
 /// Retrieve details of users. It is possible to:
 ///
 /// - Specify a search criteria for users
 /// - Sort the users to be returned
-/// - Select the fields to be returned
 /// - Specify the number of users to retrieve per page and the page index
 ///
 /// The q query parameter can be used to get users that match the specified criteria using
@@ -32,20 +31,25 @@ use crate::{Page, Sort};
 /// * `read:users`
 /// * `read:user_idp_tokens`
 #[derive(Serialize)]
-pub struct UsersFind<AppMetadata, UserMetadata> {
+pub struct UsersFind<'a, A, U> {
+  #[serde(skip_serializing)]
+  client: &'a Auth0,
+
   #[serde(flatten)]
   page: Page,
   #[serde(skip_serializing_if = "Sort::is_emtpy")]
   sort: Sort,
 
-  app_metadata: PhantomData<AppMetadata>,
-  user_metadata: PhantomData<UserMetadata>,
+  app_metadata: PhantomData<A>,
+  user_metadata: PhantomData<U>,
 }
 
-impl<A, U> UsersFind<A, U> {
+impl<'a, A, U> UsersFind<'a, A, U> {
   /// Create find users request.
-  pub fn new() -> Self {
+  pub fn new(client: &'a Auth0) -> Self {
     Self {
+      client,
+      
       page: Default::default(),
       sort: Default::default(),
 
@@ -55,34 +59,28 @@ impl<A, U> UsersFind<A, U> {
   }
 }
 
-impl<AppMetadata, UserMetadata> AsMut<Page> for UsersFind<AppMetadata, UserMetadata> {
+impl<'a, A, U> AsMut<Page> for UsersFind<'a, A, U> {
   fn as_mut(&mut self) -> &mut Page {
     &mut self.page
   }
 }
 
-impl<AppMetadata, UserMetadata> AsMut<Sort> for UsersFind<AppMetadata, UserMetadata> {
+impl<'a, A, U> AsMut<Sort> for UsersFind<'a, A, U> {
   fn as_mut(&mut self) -> &mut Sort {
     &mut self.sort
   }
 }
 
-impl<AppMetadata, UserMetadata> Default for UsersFind<AppMetadata, UserMetadata> {
-  fn default() -> Self {
-    Self {
-      page: Default::default(),
-      sort: Default::default(),
-
-      app_metadata: Default::default(),
-      user_metadata: Default::default(),
-    }
+impl<'a, A, U> AsRef<Auth0> for UsersFind<'a, A, U> {
+  fn as_ref(&self) -> &Auth0 {
+    self.client
   }
 }
 
-impl<AppMetadata: DeserializeOwned, UserMetadata: DeserializeOwned> RelativeRequestBuilder
-  for UsersFind<AppMetadata, UserMetadata>
+impl<'a, A: DeserializeOwned, U: DeserializeOwned> Auth0RequestBuilder
+  for UsersFind<'a, A, U>
 {
-  type Response = Vec<User<AppMetadata, UserMetadata>>;
+  type Response = Vec<User<A, U>>;
 
   fn build<F>(&self, factory: F) -> RequestBuilder
   where

@@ -4,7 +4,7 @@ use serde::de::DeserializeOwned;
 use serde::export::PhantomData;
 
 use crate::users::User;
-use crate::RelativeRequestBuilder;
+use crate::Auth0RequestBuilder;
 
 /// Retrieve user details. A list of fields to include or exclude may also be specified.
 ///
@@ -31,7 +31,7 @@ impl<AppMetadata, UserMetadata> UserGet<AppMetadata, UserMetadata> {
   }
 }
 
-impl<AppMetadata: DeserializeOwned, UserMetadata: DeserializeOwned> RelativeRequestBuilder
+impl<AppMetadata: DeserializeOwned, UserMetadata: DeserializeOwned> Auth0RequestBuilder
   for UserGet<AppMetadata, UserMetadata>
 {
   type Response = User<AppMetadata, UserMetadata>;
@@ -65,7 +65,7 @@ impl<AppMetadata, UserMetadata> GetUserByEmail<AppMetadata, UserMetadata> {
   }
 }
 
-impl<AppMetadata: DeserializeOwned, UserMetadata: DeserializeOwned> RelativeRequestBuilder
+impl<AppMetadata: DeserializeOwned, UserMetadata: DeserializeOwned> Auth0RequestBuilder
   for GetUserByEmail<AppMetadata, UserMetadata>
 {
   type Response = User<AppMetadata, UserMetadata>;

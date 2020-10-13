@@ -4,7 +4,7 @@ use reqwest::{Method, RequestBuilder};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use crate::RelativeRequestBuilder;
+use crate::{Auth0, Auth0RequestBuilder};
 use crate::{Page, Sort, User};
 
 /// User log event.
@@ -94,26 +94,11 @@ pub struct UserLogLocationInfo {
 /// # Scopes
 /// * `read:logs`
 /// * `read:logs_users`
-///
-/// # Example
-/// ```
-/// use auth0_management::{Auth0, User, UserLogsGet, Ordering, Pageable, Sortable};
-///  
-/// async fn dump_logs<A, U>(client: &mut Auth0, user: &User<A, U>) {
-///   let logs = client.query(
-///     UserLogsGet::from(user)
-///       .sort("date", Ordering::Ascending)
-///       .per_page(100)
-///   ).await.unwrap();
-///
-///   for log in logs {
-///     println!("kind: {}", log.kind);
-///     println!("date: {}", log.date);
-///   }
-/// }
-/// ```
 #[derive(Serialize)]
-pub struct UserLogsGet {
+pub struct UserLogsGet<'a> {
+  #[serde(skip_serializing)]
+  client: &'a Auth0,
+
   #[serde(skip)]
   id: String,
   #[serde(flatten)]
@@ -122,10 +107,12 @@ pub struct UserLogsGet {
   sort: Sort,
 }
 
-impl UserLogsGet {
+impl<'a> UserLogsGet<'a> {
   /// Create [GetUserLogs] request.
-  pub fn new(id: &str) -> Self {
+  pub fn new(client: &'a Auth0, id: &str) -> Self {
     Self {
+      client,
+
       id: id.to_owned(),
       page: Default::default(),
       sort: Default::default(),
@@ -133,25 +120,25 @@ impl UserLogsGet {
   }
 }
 
-impl<A, U> From<&User<A, U>> for UserLogsGet {
-  fn from(user: &User<A, U>) -> Self {
-    UserLogsGet::new(&user.user_id)
-  }
-}
-
-impl AsMut<Page> for UserLogsGet {
+impl<'a> AsMut<Page> for UserLogsGet<'a> {
   fn as_mut(&mut self) -> &mut Page {
     &mut self.page
   }
 }
 
-impl AsMut<Sort> for UserLogsGet {
+impl<'a> AsMut<Sort> for UserLogsGet<'a> {
   fn as_mut(&mut self) -> &mut Sort {
     &mut self.sort
   }
 }
 
-impl RelativeRequestBuilder for UserLogsGet {
+impl<'a> AsRef<Auth0> for UserLogsGet<'a> {
+  fn as_ref(&self) -> &Auth0 {
+    self.client
+  }
+}
+
+impl<'a> Auth0RequestBuilder for UserLogsGet<'a> {
   type Response = Vec<UserLog>;
 
   fn build<F>(&self, factory: F) -> RequestBuilder

@@ -3,6 +3,8 @@
 
 use std::error::Error;
 use std::fmt::{Display, Formatter};
+use std::ops::Deref;
+use std::sync::Arc;
 
 use reqwest::{Client, Method, RequestBuilder};
 use serde::de::DeserializeOwned;
@@ -11,17 +13,23 @@ use serde::Deserialize;
 
 #[doc(inline)]
 pub use api::*;
+pub use client::*;
 pub use page::*;
+pub use request::*;
 pub use sort::*;
 pub use users::*;
 
+use crate::client::Auth0Client;
 use crate::rate::{RateLimit, RateLimitError, RateLimitResponse};
 use crate::token::{TokenError, TokenManager};
+use async_mutex::Mutex;
 
+mod request;
 pub mod sort;
 
 #[allow(missing_docs)]
 pub mod api;
+pub mod client;
 pub mod page;
 #[doc(hidden)]
 pub mod rate;
@@ -30,44 +38,12 @@ pub mod token;
 pub mod users;
 
 /// Auth0 management client.
-pub struct Auth0 {
-  rate: RateLimit,
-  token: TokenManager,
-  client: Client,
-}
+pub struct Auth0(Arc<Mutex<Auth0Client>>);
 
 impl Auth0 {
   /// Create Auth0 client
   pub fn builder() -> Auth0Builder {
     Default::default()
-  }
-
-  /// Query API
-  pub async fn query<R>(&mut self, req: &R) -> Result<R::Response, Auth0Error>
-  where
-    R: RelativeRequestBuilder + ?Sized,
-  {
-    let token = self.token.get_token().await?;
-    let res = req
-      .build(|method, path| {
-        self
-          .client
-          .request(method, &format!("https://{}/{}", self.token.domain, path))
-      })
-      .bearer_auth(&token)
-      .send()
-      .await?;
-
-    if res.status().is_success() {
-      Ok(
-        res
-          .rate_limit(&mut self.rate)?
-          .json::<R::Response>()
-          .await?,
-      )
-    } else {
-      Err(Auth0Error::from(res.json::<Auth0ErrorResponse>().await?))
-    }
   }
 }
 
@@ -97,8 +73,7 @@ impl Auth0Builder {
     let client_secret = self
       .client_secret
       .ok_or(Auth0BuilderError::MissingClientSecret)?;
-
-    Ok(Auth0 {
+    let client = Auth0Client {
       rate: RateLimit::new(),
       token: TokenManager::new(
         client.clone(),
@@ -108,7 +83,9 @@ impl Auth0Builder {
         &client_secret,
       ),
       client,
-    })
+    };
+
+    Ok(Auth0(Arc::new(RwLock::new(client))))
   }
 
   /// The auth0 tenant domain.
@@ -232,17 +209,3 @@ impl Display for Auth0BuilderError {
 }
 
 impl Error for Auth0BuilderError {}
-
-/// Builds request without absolute URI.
-pub trait RelativeRequestBuilder {
-  /// The response type.
-  type Response: DeserializeOwned;
-
-  /// Build relative request.
-  ///
-  /// # Arguments
-  /// * `factory` - The absolute request builder factory.
-  fn build<F>(&self, factory: F) -> RequestBuilder
-  where
-    F: FnOnce(Method, &str) -> RequestBuilder;
-}

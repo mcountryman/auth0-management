@@ -1,10 +1,8 @@
 //! Retrieve all permissions associated with the user.
-use std::ops::{Deref, DerefMut};
-
 use reqwest::{Method, RequestBuilder};
 
-use crate::RelativeRequestBuilder;
-use crate::{Page, Permission, User};
+use crate::{Auth0RequestBuilder, Auth0};
+use crate::{Page, Permission};
 
 /// Provides data for get user permissions request.
 ///
@@ -15,48 +13,38 @@ use crate::{Page, Permission, User};
 /// ```
 /// async fn dump_permissions() {}
 /// ```
-pub struct UserPermissionsGet {
+pub struct UserPermissionsGet<'a> {
+  client: &'a Auth0,
+  
   id: String,
   page: Page,
 }
 
-impl UserPermissionsGet {
+impl<'a> UserPermissionsGet<'a> {
   /// Create get user permissions request.
-  pub fn new(id: &str) -> Self {
+  pub fn new(client: &'a Auth0, id: &str) -> Self {
     Self {
+      client,
+      
       id: id.to_owned(),
       page: Default::default(),
     }
   }
 }
 
-impl Deref for UserPermissionsGet {
-  type Target = Page;
-
-  fn deref(&self) -> &Self::Target {
-    &self.page
-  }
-}
-
-impl DerefMut for UserPermissionsGet {
-  fn deref_mut(&mut self) -> &mut Self::Target {
+impl<'a> AsMut<Page> for UserPermissionsGet<'a> {
+  fn as_mut(&mut self) -> &mut Page {
     &mut self.page
   }
 }
 
-impl<A, U> From<User<A, U>> for UserPermissionsGet {
-  fn from(user: User<A, U>) -> Self {
-    Self::new(&user.user_id)
+impl<'a> AsRef<Auth0> for UserPermissionsGet<'a> {
+  fn as_ref(&self) -> &Auth0 {
+    self.client
   }
 }
 
-impl<A, U> From<&User<A, U>> for UserPermissionsGet {
-  fn from(user: &User<A, U>) -> Self {
-    Self::new(&user.user_id)
-  }
-}
-
-impl RelativeRequestBuilder for UserPermissionsGet {
+impl<'a> Auth0RequestBuilder for UserPermissionsGet<'a> {
   type Response = Vec<Permission>;
 
   fn build<F>(&self, factory: F) -> RequestBuilder
