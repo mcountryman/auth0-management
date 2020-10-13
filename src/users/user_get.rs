@@ -7,10 +7,6 @@ use crate::users::User;
 use crate::Auth0RequestBuilder;
 
 /// Retrieve user details. A list of fields to include or exclude may also be specified.
-///
-/// # Scopes
-/// * `read:users`
-/// * `read:user_idp_tokens`
 pub struct UserGet<AppMetadata, UserMetadata> {
   id: String,
 
@@ -20,11 +16,9 @@ pub struct UserGet<AppMetadata, UserMetadata> {
 
 impl<AppMetadata, UserMetadata> UserGet<AppMetadata, UserMetadata> {
   /// Create get user request.
-  /// # Arguments
-  /// * `id` - The ID of the user to retrieve.
-  pub fn new(id: &str) -> Self {
+  pub fn new<S: AsRef<String>>(id: S) -> Self {
     Self {
-      id: id.to_owned(),
+      id: id.as_ref().to_string(),
       app_metadata: Default::default(),
       user_metadata: Default::default(),
     }

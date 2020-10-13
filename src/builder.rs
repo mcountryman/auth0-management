@@ -3,10 +3,9 @@ use std::error::Error;
 use std::fmt::{Display, Formatter};
 
 use reqwest::Client;
-use serde::Deserialize;
 
-use crate::rate::{RateLimit, RateLimitError};
-use crate::token::{TokenError, TokenManager};
+use crate::rate::RateLimit;
+use crate::token::TokenManager;
 use crate::{Auth0, Auth0Client};
 
 /// Management client interface.
@@ -97,57 +96,6 @@ impl Default for Auth0Builder {
       client_id: None,
       client_secret: None,
     }
-  }
-}
-
-/// The error returned when querying Auth0.
-#[derive(Debug)]
-pub enum Auth0Error {
-  /// Generic http error.
-  Http(reqwest::Error),
-  /// Authentication token error.
-  Token(TokenError),
-  /// Auth0 server side error.
-  Auth0(String),
-  /// Auth0 rate limit error.
-  RateLimit(RateLimitError),
-}
-
-impl Display for Auth0Error {
-  fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-    write!(f, "{:?}", self)
-  }
-}
-
-impl Error for Auth0Error {}
-
-impl From<TokenError> for Auth0Error {
-  fn from(inner: TokenError) -> Self {
-    Auth0Error::Token(inner)
-  }
-}
-
-impl From<reqwest::Error> for Auth0Error {
-  fn from(inner: reqwest::Error) -> Self {
-    Auth0Error::Http(inner)
-  }
-}
-
-impl From<RateLimitError> for Auth0Error {
-  fn from(inner: RateLimitError) -> Self {
-    Auth0Error::RateLimit(inner)
-  }
-}
-
-/// Auth0 error response.
-#[derive(Deserialize)]
-pub struct Auth0ErrorResponse {
-  message: String,
-}
-
-impl From<Auth0ErrorResponse> for Auth0Error {
-  fn from(inner: Auth0ErrorResponse) -> Self {
-    Auth0Error::Auth0(inner.message)
   }
 }
 

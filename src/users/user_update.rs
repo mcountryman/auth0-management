@@ -7,24 +7,6 @@ use crate::users::User;
 use crate::{Auth0Client, Auth0RequestBuilder};
 
 /// Update a user.
-/// Some considerations:
-///
-/// * The properties of the new object will replace the old ones.
-/// * The metadata fields are an exception to this rule (`user_metadata` and `app_metadata`). These
-/// properties are merged instead of being replaced but be careful, the merge only occurs on the
-/// first level.
-/// * If you are updating `email`, `email_verified`, `phone_number`, `phone_verified`, `username` or
-/// `password` of a secondary identity, you need to specify the connection property too.
-/// * If you are updating `email` or `phone_number` you can specify, optionally, the `client_id`
-/// property.
-/// * Updating `email_verified` is not supported for enterprise and passwordless sms connections.
-/// * Updating the `blocked` to `false` does not affect the user's blocked state from an excessive
-/// amount of incorrectly provided credentials. Use the "Unblock a user" endpoint from the
-/// "User Blocks" API to change the user's state.
-///
-/// # Scopes
-/// * `update:users`
-/// * `update:users_app_metadata`
 #[derive(Serialize)]
 pub struct UserUpdate<'a, A, U> {
   #[serde(skip_serializing)]
@@ -71,11 +53,11 @@ pub struct UserUpdate<'a, A, U> {
 
 impl<'a, A, U> UserUpdate<'a, A, U> {
   /// Create update user request.
-  pub fn new(client: &'a Auth0Client, id: &str) -> Self {
+  pub fn new<S: AsRef<String>>(client: &'a Auth0Client, id: S) -> Self {
     Self {
       client,
 
-      user_id: id.to_owned(),
+      user_id: id.as_ref().to_string(),
       blocked: None,
       email: None,
       email_verified: None,

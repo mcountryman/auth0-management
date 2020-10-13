@@ -9,16 +9,6 @@ use crate::{Auth0Client, Auth0RequestBuilder};
 ///
 /// # Scopes
 /// * `update:users`
-///
-/// # Example
-/// ```
-/// use auth0_management::UserPermissionsDelete;
-///
-/// async fn delete_permissions() {
-///   UserPermissionsDelete::new("USER_ID")
-///     .permissions(Vec::new());
-/// }
-/// ```
 pub struct UserPermissionsDelete<'a> {
   client: &'a Auth0Client,
 

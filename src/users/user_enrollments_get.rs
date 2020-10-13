@@ -35,22 +35,16 @@ pub struct UserEnrollment {
 /// Retrieve the first confirmed [Guardian](https://auth0
 /// .com/docs/multifactor-authentication/guardian)
 /// enrollment for a user.
-///
-/// # Scopes
-/// * `read:users`
-///
-/// # Example
-/// ```
-/// async fn dump_enrollments() {}
-/// ```
 pub struct UserEnrollmentsGet {
   id: String,
 }
 
 impl UserEnrollmentsGet {
   /// Create user enrollments request.
-  pub fn new(id: &str) -> Self {
-    Self { id: id.to_owned() }
+  pub fn new<S: AsRef<String>>(id: S) -> Self {
+    Self {
+      id: id.as_ref().to_owned(),
+    }
   }
 }
 

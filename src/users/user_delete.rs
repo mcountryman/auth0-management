@@ -11,11 +11,8 @@ pub struct UserDelete(String);
 
 impl UserDelete {
   /// Create delete user request.
-  ///
-  /// # Arguments
-  /// * `id` - The id of the user to delete.
-  pub fn new(id: &str) -> Self {
-    Self(id.to_owned())
+  pub fn new<S: AsRef<String>>(id: S) -> Self {
+    Self(id.as_ref().to_string())
   }
 }
 

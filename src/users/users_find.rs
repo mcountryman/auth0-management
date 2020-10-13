@@ -8,28 +8,7 @@ use crate::users::User;
 use crate::{Auth0Client, Auth0RequestBuilder};
 use crate::{Page, Sort};
 
-/// Retrieve details of users. It is possible to:
-///
-/// - Specify a search criteria for users
-/// - Sort the users to be returned
-/// - Specify the number of users to retrieve per page and the page index
-///
-/// The q query parameter can be used to get users that match the specified criteria using
-/// [query string syntax](https://auth0.com/docs/users/search/v3/query-syntax).
-///
-/// [Learn more about searching for users.](https://auth0.com/docs/users/search/v3)
-///
-/// Read about [best practices](https://auth0.com/docs/users/search/best-practices) when working
-/// with the API endpoints for retrieving users.
-///
-/// Auth0 limits the number of users you can return. If you exceed this threshold, please
-/// redefine your search, use the
-/// [export job](https://auth0.com/docs/api/management/v2#!/Jobs/post_users_exports), or the
-/// [User Import / Export](https://auth0.com/docs/extensions/user-import-export) extension.
-///
-/// # Scopes
-/// * `read:users`
-/// * `read:user_idp_tokens`
+/// Retrieve details of users.
 #[derive(Serialize)]
 pub struct UsersFind<'a, A, U> {
   #[serde(skip_serializing)]

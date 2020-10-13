@@ -79,21 +79,6 @@ pub struct UserLogLocationInfo {
 }
 
 /// Retrieve log events for a specific user.
-///
-/// Note: For more information on all possible event types, their respective acronyms and
-/// descriptions, see [Log Data Event Listing](https://auth0.com/docs/logs#log-data-event-listing).
-///
-/// For more information on the list of fields that can be used in `sort`, see
-/// [Searchable Fields](https://auth0.com/docs/logs/query-syntax#searchable-fields).
-///
-/// Auth0 [limits the number of logs](https://auth0.com/docs/logs#limitations) you can
-/// return by search criteria to 100 logs per request. Furthermore, you may only paginate
-/// through up to 1,000 search results. If you exceed this threshold, please redefine your
-/// search.
-///
-/// # Scopes
-/// * `read:logs`
-/// * `read:logs_users`
 #[derive(Serialize)]
 pub struct UserLogsGet<'a> {
   #[serde(skip_serializing)]
@@ -109,11 +94,11 @@ pub struct UserLogsGet<'a> {
 
 impl<'a> UserLogsGet<'a> {
   /// Create [GetUserLogs] request.
-  pub fn new(client: &'a Auth0Client, id: &str) -> Self {
+  pub fn new<S: AsRef<String>>(client: &'a Auth0Client, id: S) -> Self {
     Self {
       client,
 
-      id: id.to_owned(),
+      id: id.as_ref().to_string(),
       page: Default::default(),
       sort: Default::default(),
     }
