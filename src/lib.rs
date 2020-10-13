@@ -191,7 +191,7 @@ impl Auth0 {
   /// # Scopes
   /// * `update:users`
   /// * `update:users_app_metadata`
-  pub fn update_user<A, U, S: AsRef<String>>(&self, id: S) -> UserUpdate<'_, A, U> {
+  pub fn update_user<A, U, S: AsRef<str>>(&self, id: S) -> UserUpdate<'_, A, U> {
     UserUpdate::new(&self.0, id)
   }
 

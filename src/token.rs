@@ -1,11 +1,11 @@
 use std::error::Error;
 use std::time::{SystemTime, SystemTimeError};
 
+use async_mutex::Mutex;
 use reqwest::{Client, StatusCode};
 use serde::export::Formatter;
 use serde::{Deserialize, Serialize};
 use std::ops::Deref;
-use async_mutex::Mutex;
 
 /// Auth0 OAuth token.
 #[derive(Deserialize)]
@@ -79,12 +79,7 @@ impl TokenManager {
       None => Ok(self.fetch_token().await?),
       Some(token) => {
         let elapsed = SystemTime::now()
-          .duration_since(
-            *self
-              .token_last
-              .lock()
-              .await,
-          )
+          .duration_since(*self.token_last.lock().await)
           .map_err(TokenError::Time)?;
 
         if elapsed.as_secs() > token.expires_in {
@@ -112,15 +107,9 @@ impl TokenManager {
     let token: Token = res.json().await?;
     let access_token = token.access_token.clone();
 
-    *self
-      .token
-      .lock()
-      .await = Some(token);
+    *self.token.lock().await = Some(token);
 
-    *self
-      .token_last
-      .lock()
-      .await = SystemTime::now();
+    *self.token_last.lock().await = SystemTime::now();
 
     Ok(access_token)
   }

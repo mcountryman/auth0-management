@@ -53,7 +53,7 @@ pub struct UserUpdate<'a, A, U> {
 
 impl<'a, A, U> UserUpdate<'a, A, U> {
   /// Create update user request.
-  pub fn new<S: AsRef<String>>(client: &'a Auth0Client, id: S) -> Self {
+  pub fn new<S: AsRef<str>>(client: &'a Auth0Client, id: S) -> Self {
     Self {
       client,
 
