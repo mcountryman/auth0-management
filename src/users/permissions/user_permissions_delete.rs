@@ -2,8 +2,8 @@
 
 use reqwest::{Method, RequestBuilder};
 
-use crate::{Auth0RequestBuilder, Auth0};
 use crate::Permission;
+use crate::{Auth0Client, Auth0RequestBuilder};
 
 /// Provides data for creating delete user permission request.
 ///
@@ -20,8 +20,8 @@ use crate::Permission;
 /// }
 /// ```
 pub struct UserPermissionsDelete<'a> {
-  client: &'a Auth0,
-  
+  client: &'a Auth0Client,
+
   id: String,
   permissions: Vec<Permission>,
 }
@@ -31,10 +31,10 @@ impl<'a> UserPermissionsDelete<'a> {
   ///
   /// # Arguments
   /// * `id` - The id of the user.
-  pub fn new(client: &'a Auth0, id: &str) -> Self {
+  pub fn new(client: &'a Auth0Client, id: &str) -> Self {
     Self {
       client,
-      
+
       id: id.to_owned(),
       permissions: Vec::new(),
     }
@@ -59,8 +59,8 @@ impl<'a> UserPermissionsDelete<'a> {
   }
 }
 
-impl<'a> AsRef<Auth0> for UserPermissionsDelete<'a> {
-  fn as_ref(&self) -> &Auth0 {
+impl<'a> AsRef<Auth0Client> for UserPermissionsDelete<'a> {
+  fn as_ref(&self) -> &Auth0Client {
     self.client
   }
 }

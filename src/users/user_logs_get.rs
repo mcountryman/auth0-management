@@ -4,8 +4,8 @@ use reqwest::{Method, RequestBuilder};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use crate::{Auth0, Auth0RequestBuilder};
-use crate::{Page, Sort, User};
+use crate::{Auth0Client, Auth0RequestBuilder};
+use crate::{Page, Sort};
 
 /// User log event.
 #[derive(Debug, Deserialize)]
@@ -97,7 +97,7 @@ pub struct UserLogLocationInfo {
 #[derive(Serialize)]
 pub struct UserLogsGet<'a> {
   #[serde(skip_serializing)]
-  client: &'a Auth0,
+  client: &'a Auth0Client,
 
   #[serde(skip)]
   id: String,
@@ -109,7 +109,7 @@ pub struct UserLogsGet<'a> {
 
 impl<'a> UserLogsGet<'a> {
   /// Create [GetUserLogs] request.
-  pub fn new(client: &'a Auth0, id: &str) -> Self {
+  pub fn new(client: &'a Auth0Client, id: &str) -> Self {
     Self {
       client,
 
@@ -132,8 +132,8 @@ impl<'a> AsMut<Sort> for UserLogsGet<'a> {
   }
 }
 
-impl<'a> AsRef<Auth0> for UserLogsGet<'a> {
-  fn as_ref(&self) -> &Auth0 {
+impl<'a> AsRef<Auth0Client> for UserLogsGet<'a> {
+  fn as_ref(&self) -> &Auth0Client {
     self.client
   }
 }

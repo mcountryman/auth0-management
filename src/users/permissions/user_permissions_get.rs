@@ -1,7 +1,7 @@
 //! Retrieve all permissions associated with the user.
 use reqwest::{Method, RequestBuilder};
 
-use crate::{Auth0RequestBuilder, Auth0};
+use crate::{Auth0Client, Auth0RequestBuilder};
 use crate::{Page, Permission};
 
 /// Provides data for get user permissions request.
@@ -14,18 +14,18 @@ use crate::{Page, Permission};
 /// async fn dump_permissions() {}
 /// ```
 pub struct UserPermissionsGet<'a> {
-  client: &'a Auth0,
-  
+  client: &'a Auth0Client,
+
   id: String,
   page: Page,
 }
 
 impl<'a> UserPermissionsGet<'a> {
   /// Create get user permissions request.
-  pub fn new(client: &'a Auth0, id: &str) -> Self {
+  pub fn new(client: &'a Auth0Client, id: &str) -> Self {
     Self {
       client,
-      
+
       id: id.to_owned(),
       page: Default::default(),
     }
@@ -38,8 +38,8 @@ impl<'a> AsMut<Page> for UserPermissionsGet<'a> {
   }
 }
 
-impl<'a> AsRef<Auth0> for UserPermissionsGet<'a> {
-  fn as_ref(&self) -> &Auth0 {
+impl<'a> AsRef<Auth0Client> for UserPermissionsGet<'a> {
+  fn as_ref(&self) -> &Auth0Client {
     self.client
   }
 }

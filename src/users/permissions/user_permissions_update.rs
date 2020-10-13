@@ -1,7 +1,7 @@
 //! Assign permissions to a user.
 
-use crate::{Auth0RequestBuilder, Auth0};
 use crate::Permission;
+use crate::{Auth0Client, Auth0RequestBuilder};
 use reqwest::{Method, RequestBuilder};
 
 /// Assign user permissions.
@@ -14,8 +14,8 @@ use reqwest::{Method, RequestBuilder};
 /// async fn add_permission() {}
 /// ```
 pub struct UserPermissionsUpdate<'a> {
-  client: &'a Auth0,
-  
+  client: &'a Auth0Client,
+
   id: String,
   permissions: Vec<Permission>,
 }
@@ -25,10 +25,10 @@ impl<'a> UserPermissionsUpdate<'a> {
   ///
   /// # Arguments
   /// * `id` - The user id.
-  pub fn new(client: &'a Auth0, id: &str) -> Self {
+  pub fn new(client: &'a Auth0Client, id: &str) -> Self {
     Self {
       client,
-      
+
       id: id.to_owned(),
       permissions: Vec::new(),
     }
@@ -53,8 +53,8 @@ impl<'a> UserPermissionsUpdate<'a> {
   }
 }
 
-impl<'a> AsRef<Auth0> for UserPermissionsUpdate<'a> {
-  fn as_ref(&self) -> &Auth0 {
+impl<'a> AsRef<Auth0Client> for UserPermissionsUpdate<'a> {
+  fn as_ref(&self) -> &Auth0Client {
     self.client
   }
 }
@@ -79,7 +79,7 @@ impl<'a> Auth0RequestBuilder for UserPermissionsUpdate<'a> {
 //   use crate::Auth0RequestBuilder;
 //   use crate::{Permission, UserPermissionsUpdate};
 //   use reqwest::Client;
-// 
+//
 //   #[test]
 //   fn test_create() {
 //     let req = UserPermissionsUpdate::new("USER_ID")
@@ -108,10 +108,10 @@ impl<'a> Auth0RequestBuilder for UserPermissionsUpdate<'a> {
 //       })
 //       .build()
 //       .unwrap();
-// 
+//
 //     let body: Vec<Permission> =
 //       serde_json::from_reader(req.body().unwrap().as_bytes().unwrap()).unwrap();
-// 
+//
 //     assert_eq!(req.url().path(), "/api/v2/users/USER_ID/permissions");
 //     assert_eq!(body.len(), 3);
 //     assert_eq!(body.first().unwrap().name, "test1");

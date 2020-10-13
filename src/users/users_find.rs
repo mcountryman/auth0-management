@@ -5,7 +5,7 @@ use serde::export::PhantomData;
 use serde::Serialize;
 
 use crate::users::User;
-use crate::{Auth0, Auth0RequestBuilder};
+use crate::{Auth0Client, Auth0RequestBuilder};
 use crate::{Page, Sort};
 
 /// Retrieve details of users. It is possible to:
@@ -33,7 +33,7 @@ use crate::{Page, Sort};
 #[derive(Serialize)]
 pub struct UsersFind<'a, A, U> {
   #[serde(skip_serializing)]
-  client: &'a Auth0,
+  client: &'a Auth0Client,
 
   #[serde(flatten)]
   page: Page,
@@ -46,10 +46,10 @@ pub struct UsersFind<'a, A, U> {
 
 impl<'a, A, U> UsersFind<'a, A, U> {
   /// Create find users request.
-  pub fn new(client: &'a Auth0) -> Self {
+  pub fn new(client: &'a Auth0Client) -> Self {
     Self {
       client,
-      
+
       page: Default::default(),
       sort: Default::default(),
 
@@ -71,8 +71,8 @@ impl<'a, A, U> AsMut<Sort> for UsersFind<'a, A, U> {
   }
 }
 
-impl<'a, A, U> AsRef<Auth0> for UsersFind<'a, A, U> {
-  fn as_ref(&self) -> &Auth0 {
+impl<'a, A, U> AsRef<Auth0Client> for UsersFind<'a, A, U> {
+  fn as_ref(&self) -> &Auth0Client {
     self.client
   }
 }

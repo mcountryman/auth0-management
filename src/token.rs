@@ -4,6 +4,8 @@ use std::time::{SystemTime, SystemTimeError};
 use reqwest::{Client, StatusCode};
 use serde::export::Formatter;
 use serde::{Deserialize, Serialize};
+use std::ops::Deref;
+use async_mutex::Mutex;
 
 /// Auth0 OAuth token.
 #[derive(Deserialize)]
@@ -42,9 +44,9 @@ pub struct TokenManager {
   client: Client,
   pub(crate) domain: String,
 
-  pub token: Option<Token>,
+  token: Mutex<Option<Token>>,
   token_opts: TokenOpts,
-  pub token_last: SystemTime,
+  token_last: Mutex<SystemTime>,
 }
 
 impl TokenManager {
@@ -59,37 +61,43 @@ impl TokenManager {
     Self {
       client,
       domain: domain.to_owned(),
-      token: None,
+      token: Mutex::new(None),
       token_opts: TokenOpts {
         audience: audience.to_owned(),
         grant_type: "client_credentials".to_owned(),
         client_id: client_id.to_owned(),
         client_secret: client_secret.to_owned(),
       },
-      token_last: SystemTime::UNIX_EPOCH,
+      token_last: Mutex::new(SystemTime::UNIX_EPOCH),
     }
   }
 
   /// Gets valid encoded JWT token.
-  pub async fn get_token(&mut self) -> Result<String, TokenError> {
-    match &self.token {
+  pub async fn get_token(&self) -> Result<String, TokenError> {
+    let token = self.token.lock().await;
+    match token.deref() {
       None => Ok(self.fetch_token().await?),
       Some(token) => {
         let elapsed = SystemTime::now()
-          .duration_since(self.token_last)
+          .duration_since(
+            *self
+              .token_last
+              .lock()
+              .await,
+          )
           .map_err(TokenError::Time)?;
 
         if elapsed.as_secs() > token.expires_in {
           Ok(self.fetch_token().await?)
         } else {
-          Ok(self.token.as_ref().unwrap().access_token.to_owned())
+          Ok(token.access_token.to_owned())
         }
       }
     }
   }
 
   /// Gets new encoded JWT token from auth0.
-  async fn fetch_token(&mut self) -> Result<String, TokenError> {
+  async fn fetch_token(&self) -> Result<String, TokenError> {
     let res = self
       .client
       .post(&format!("https://{}/oauth/token", self.domain))
@@ -101,12 +109,20 @@ impl TokenManager {
       return Err(res.json::<TokenErrorResponse>().await?.into());
     }
 
-    let token = res.json().await?;
+    let token: Token = res.json().await?;
+    let access_token = token.access_token.clone();
 
-    self.token = Some(token);
-    self.token_last = SystemTime::now();
+    *self
+      .token
+      .lock()
+      .await = Some(token);
 
-    Ok(self.token.as_ref().unwrap().access_token.to_owned())
+    *self
+      .token_last
+      .lock()
+      .await = SystemTime::now();
+
+    Ok(access_token)
   }
 }
 

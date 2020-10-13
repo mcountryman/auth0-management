@@ -3,8 +3,8 @@ use reqwest::{Method, RequestBuilder};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
-use crate::{Auth0, Auth0RequestBuilder};
 use crate::users::User;
+use crate::{Auth0Client, Auth0RequestBuilder};
 
 /// Update a user.
 /// Some considerations:
@@ -28,7 +28,7 @@ use crate::users::User;
 #[derive(Serialize)]
 pub struct UserUpdate<'a, A, U> {
   #[serde(skip_serializing)]
-  client: &'a Auth0,
+  client: &'a Auth0Client,
 
   #[serde(skip_serializing)]
   user_id: String,
@@ -71,10 +71,10 @@ pub struct UserUpdate<'a, A, U> {
 
 impl<'a, A, U> UserUpdate<'a, A, U> {
   /// Create update user request.
-  pub fn new(client: &'a Auth0, id: &str) -> Self {
+  pub fn new(client: &'a Auth0Client, id: &str) -> Self {
     Self {
       client,
-      
+
       user_id: id.to_owned(),
       blocked: None,
       email: None,
@@ -209,23 +209,20 @@ impl<'a, A, U> UserUpdate<'a, A, U> {
   }
 }
 
-impl<'a, A, U> AsRef<Auth0> for UserUpdate<'a, A, U> {
-  fn as_ref(&self) -> &Auth0 {
+impl<'a, A, U> AsRef<Auth0Client> for UserUpdate<'a, A, U> {
+  fn as_ref(&self) -> &Auth0Client {
     self.client
   }
 }
 
-impl<
-  'a,
-  A: Serialize + DeserializeOwned,
-  U: Serialize + DeserializeOwned,
-> Auth0RequestBuilder for UserUpdate<'a, A, U>
+impl<'a, A: Serialize + DeserializeOwned, U: Serialize + DeserializeOwned>
+  Auth0RequestBuilder for UserUpdate<'a, A, U>
 {
   type Response = User<A, U>;
 
   fn build<F>(&self, factory: F) -> RequestBuilder
-    where
-      F: FnOnce(Method, &str) -> RequestBuilder,
+  where
+    F: FnOnce(Method, &str) -> RequestBuilder,
   {
     factory(Method::DELETE, &format!("api/v2/users/{}", self.user_id)).json(self)
   }

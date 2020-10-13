@@ -1,37 +1,44 @@
 use std::error::Error;
 use std::num::ParseIntError;
-use std::time::{Duration, SystemTime};
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use reqwest::header::ToStrError;
 use reqwest::Response;
 use serde::export::fmt::Display;
 use serde::export::Formatter;
+use std::sync::atomic::{AtomicU32, AtomicU64, Ordering};
 
 /// Provides ability to read rate limit headers and check if limits are exceeded.
 pub struct RateLimit {
-  pub limit: u32,
-  pub reset: SystemTime,
-  pub remaining: u32,
+  pub limit: AtomicU32,
+  pub reset: AtomicU64,
+  pub remaining: AtomicU32,
 }
 
 impl RateLimit {
   /// Gets instance of [RateLimit]
   pub fn new() -> Self {
     Self {
-      limit: u32::MAX,
-      reset: SystemTime::UNIX_EPOCH,
-      remaining: 0,
+      limit: AtomicU32::new(u32::MAX),
+      reset: AtomicU64::new(0),
+      remaining: AtomicU32::new(0),
     }
   }
 
   /// Gets boolean determining if rate limit was exceeded.
-  pub fn check_limit(&mut self) -> bool {
-    if SystemTime::now() >= self.reset {
-      self.remaining = self.limit;
+  pub fn check_limit(&self) -> bool {
+    let now = SystemTime::now();
+    let expire = UNIX_EPOCH + Duration::from_secs(self.reset.load(Ordering::Relaxed));
+
+    if now >= expire {
+      self
+        .remaining
+        .store(self.limit.load(Ordering::SeqCst), Ordering::SeqCst);
     }
 
-    if self.remaining > 0 {
-      self.remaining -= 1;
+    // TODO: Make this thread safe.
+    if self.remaining.load(Ordering::SeqCst) > 0 {
+      self.remaining.fetch_sub(1, Ordering::SeqCst);
 
       true
     } else {
@@ -40,40 +47,46 @@ impl RateLimit {
   }
 
   /// Read response headers and updates limits.
-  pub fn read(&mut self, res: &Response) -> Result<(), RateLimitError> {
+  pub fn read(&self, res: &Response) -> Result<(), RateLimitError> {
     let headers = res.headers();
 
-    self.limit = headers
-      .get("x-ratelimit-limit")
-      .ok_or(RateLimitError::MissingRateLimitHeader)?
-      .to_str()?
-      .parse()?;
+    self.limit.store(
+      headers
+        .get("x-ratelimit-limit")
+        .ok_or(RateLimitError::MissingRateLimitHeader)?
+        .to_str()?
+        .parse()?,
+      Ordering::SeqCst,
+    );
 
-    self.remaining = headers
-      .get("x-ratelimit-remaining")
-      .ok_or(RateLimitError::MissingRateRemainingHeader)?
-      .to_str()?
-      .parse()?;
+    self.remaining.store(
+      headers
+        .get("x-ratelimit-remaining")
+        .ok_or(RateLimitError::MissingRateRemainingHeader)?
+        .to_str()?
+        .parse()?,
+      Ordering::SeqCst,
+    );
 
-    self.reset = SystemTime::UNIX_EPOCH
-      + Duration::from_secs(
-        headers
-          .get("x-ratelimit-reset")
-          .ok_or(RateLimitError::MissingRateResetHeader)?
-          .to_str()?
-          .parse::<u64>()?,
-      );
+    self.reset.store(
+      headers
+        .get("x-ratelimit-reset")
+        .ok_or(RateLimitError::MissingRateResetHeader)?
+        .to_str()?
+        .parse::<u64>()?,
+      Ordering::SeqCst,
+    );
 
     Ok(())
   }
 }
 
 pub trait RateLimitResponse: Sized {
-  fn rate_limit(self, rate_limit: &mut RateLimit) -> Result<Self, RateLimitError>;
+  fn rate_limit(self, rate_limit: &RateLimit) -> Result<Self, RateLimitError>;
 }
 
 impl RateLimitResponse for Response {
-  fn rate_limit(self, rate_limit: &mut RateLimit) -> Result<Self, RateLimitError> {
+  fn rate_limit(self, rate_limit: &RateLimit) -> Result<Self, RateLimitError> {
     rate_limit.read(&self)?;
     Ok(self)
   }

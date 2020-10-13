@@ -1,3 +1,4 @@
+//! Auth0 request client.
 use std::error::Error;
 use std::fmt::{Display, Formatter};
 
@@ -18,7 +19,7 @@ pub struct Auth0Client {
 
 impl Auth0Client {
   /// Query API
-  pub async fn query<R>(&mut self, req: &R) -> Result<R::Response, Auth0Error>
+  pub async fn query<R>(&self, req: &R) -> Result<R::Response, Auth0Error>
   where
     R: Auth0RequestBuilder + ?Sized,
   {
@@ -34,12 +35,7 @@ impl Auth0Client {
       .await?;
 
     if res.status().is_success() {
-      Ok(
-        res
-          .rate_limit(&mut self.rate)?
-          .json::<R::Response>()
-          .await?,
-      )
+      Ok(res.rate_limit(&self.rate)?.json::<R::Response>().await?)
     } else {
       Err(Auth0Error::from(res.json::<Auth0ErrorResponse>().await?))
     }

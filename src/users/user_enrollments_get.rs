@@ -6,7 +6,6 @@ use reqwest::{Method, RequestBuilder};
 use serde::Deserialize;
 
 use crate::Auth0RequestBuilder;
-use crate::User;
 
 /// Multi-factor enrollment.
 #[derive(Debug, Clone, Deserialize)]

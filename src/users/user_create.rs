@@ -4,7 +4,7 @@ use serde::de::DeserializeOwned;
 use serde::Serialize;
 
 use crate::users::User;
-use crate::{Auth0, Auth0RequestBuilder};
+use crate::{Auth0Client, Auth0RequestBuilder};
 
 /// Create a new user for a given [database](https://auth0.com/docs/connections/database) or
 /// [passwordless](https://auth0.com/docs/connections/passwordless) connection.
@@ -17,7 +17,7 @@ use crate::{Auth0, Auth0RequestBuilder};
 #[derive(Serialize)]
 pub struct UserCreate<'a, A, U> {
   #[serde(skip_serializing)]
-  client: &'a Auth0,
+  client: &'a Auth0Client,
 
   #[serde(skip_serializing_if = "Option::is_none")]
   email: Option<String>,
@@ -58,10 +58,10 @@ pub struct UserCreate<'a, A, U> {
 
 impl<'a, A, U> UserCreate<'a, A, U> {
   /// Create create user request.
-  pub fn new(client: &'a Auth0) -> Self {
+  pub fn new(client: &'a Auth0Client) -> Self {
     Self {
       client,
-      
+
       email: None,
       phone_number: None,
       blocked: None,
@@ -189,14 +189,14 @@ impl<'a, A, U> UserCreate<'a, A, U> {
   }
 }
 
-impl<'a, A, U> AsRef<Auth0> for UserCreate<'a, A, U> {
-  fn as_ref(&self) -> &Auth0 {
+impl<'a, A, U> AsRef<Auth0Client> for UserCreate<'a, A, U> {
+  fn as_ref(&self) -> &Auth0Client {
     self.client
   }
 }
 
-impl<'a, A: Serialize + DeserializeOwned, U: Serialize + DeserializeOwned> Auth0RequestBuilder
-  for UserCreate<'a, A, U>
+impl<'a, A: Serialize + DeserializeOwned, U: Serialize + DeserializeOwned>
+  Auth0RequestBuilder for UserCreate<'a, A, U>
 {
   type Response = User<A, U>;
 

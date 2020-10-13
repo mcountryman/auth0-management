@@ -3,11 +3,8 @@
 
 use std::error::Error;
 use std::fmt::{Display, Formatter};
-use std::ops::Deref;
-use std::sync::Arc;
 
-use reqwest::{Client, Method, RequestBuilder};
-use serde::de::DeserializeOwned;
+use reqwest::Client;
 use serde::export::fmt::Debug;
 use serde::Deserialize;
 
@@ -20,9 +17,8 @@ pub use sort::*;
 pub use users::*;
 
 use crate::client::Auth0Client;
-use crate::rate::{RateLimit, RateLimitError, RateLimitResponse};
+use crate::rate::{RateLimit, RateLimitError};
 use crate::token::{TokenError, TokenManager};
-use async_mutex::Mutex;
 
 mod request;
 pub mod sort;
@@ -38,7 +34,7 @@ pub mod token;
 pub mod users;
 
 /// Auth0 management client.
-pub struct Auth0(Arc<Mutex<Auth0Client>>);
+pub struct Auth0(Auth0Client);
 
 impl Auth0 {
   /// Create Auth0 client
@@ -85,7 +81,7 @@ impl Auth0Builder {
       client,
     };
 
-    Ok(Auth0(Arc::new(RwLock::new(client))))
+    Ok(Auth0(client))
   }
 
   /// The auth0 tenant domain.
