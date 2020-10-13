@@ -127,3 +127,9 @@ impl Display for RateLimitError {
 }
 
 impl Error for RateLimitError {}
+
+#[cfg(test)]
+mod tests {
+  #[test]
+  fn test_rate_limit() {}
+}
