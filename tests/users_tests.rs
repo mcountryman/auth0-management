@@ -16,7 +16,8 @@ async fn test_find_user() {
   auth0
     .create_user::<Metadata, Metadata>()
     .email("test@example.test")
-    .connection("CONNECTION_ID")
+    .password("Th!5!s4P445w3rd")
+    .connection("Username-Password-Authentication")
     .send()
     .await
     .expect("Failed to create a user.");

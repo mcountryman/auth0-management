@@ -1,11 +1,12 @@
 use std::error::Error;
-use std::time::{SystemTime, SystemTimeError};
+use std::time::{Duration, SystemTime, SystemTimeError};
 
 use async_mutex::Mutex;
 use reqwest::{Client, StatusCode};
 use serde::export::Formatter;
 use serde::{Deserialize, Serialize};
 use std::ops::Deref;
+use std::sync::atomic::{AtomicU64, Ordering};
 
 /// Auth0 OAuth token.
 #[derive(Deserialize)]
@@ -44,9 +45,9 @@ pub struct TokenManager {
   client: Client,
   pub(crate) domain: String,
 
-  token: Mutex<Option<Token>>,
+  token: Mutex<Option<String>>,
   token_opts: TokenOpts,
-  token_last: Mutex<SystemTime>,
+  token_expiration: AtomicU64,
 }
 
 impl TokenManager {
@@ -68,27 +69,28 @@ impl TokenManager {
         client_id: client_id.to_owned(),
         client_secret: client_secret.to_owned(),
       },
-      token_last: Mutex::new(SystemTime::UNIX_EPOCH),
+      token_expiration: AtomicU64::new(0),
     }
   }
 
   /// Gets valid encoded JWT token.
   pub async fn get_token(&self) -> Result<String, TokenError> {
-    let token = self.token.lock().await;
-    match token.deref() {
-      None => Ok(self.fetch_token().await?),
-      Some(token) => {
-        let elapsed = SystemTime::now()
-          .duration_since(*self.token_last.lock().await)
-          .map_err(TokenError::Time)?;
+    let now = SystemTime::now();
+    let expiration = SystemTime::UNIX_EPOCH
+      + Duration::from_secs(self.token_expiration.load(Ordering::SeqCst));
 
-        if elapsed.as_secs() > token.expires_in {
-          Ok(self.fetch_token().await?)
-        } else {
-          Ok(token.access_token.to_owned())
-        }
+    if now > expiration {
+      return self.fetch_token().await;
+    }
+
+    {
+      let token = self.token.lock().await;
+      if let Some(token) = token.deref() {
+        return Ok(token.to_string());
       }
     }
+
+    self.fetch_token().await
   }
 
   /// Gets new encoded JWT token from auth0.
@@ -105,13 +107,17 @@ impl TokenManager {
     }
 
     let token: Token = res.json().await?;
-    let access_token = token.access_token.clone();
 
-    *self.token.lock().await = Some(token);
+    *self.token.lock().await = Some(token.access_token.clone());
+    self.token_expiration.store(
+      (SystemTime::now() + Duration::from_secs(token.expires_in))
+        .duration_since(SystemTime::UNIX_EPOCH)
+        .expect("Time went backwards")
+        .as_secs(),
+      Ordering::SeqCst,
+    );
 
-    *self.token_last.lock().await = SystemTime::now();
-
-    Ok(access_token)
+    Ok(token.access_token)
   }
 }
 
