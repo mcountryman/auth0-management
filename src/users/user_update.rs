@@ -4,7 +4,7 @@ use serde::de::DeserializeOwned;
 use serde::Serialize;
 
 use crate::users::User;
-use crate::{Auth0Client, Auth0RequestBuilder};
+use crate::{Auth0Client, Auth0Error, Auth0RequestBuilder};
 
 /// Update a user.
 #[derive(Serialize)]
@@ -51,7 +51,7 @@ pub struct UserUpdate<'a, A, U> {
   user_metadata: Option<U>,
 }
 
-impl<'a, A, U> UserUpdate<'a, A, U> {
+impl<'a> UserUpdate<'a, (), ()> {
   /// Create update user request.
   pub fn new<S: AsRef<str>>(client: &'a Auth0Client, id: S) -> Self {
     Self {
@@ -77,7 +77,9 @@ impl<'a, A, U> UserUpdate<'a, A, U> {
       user_metadata: None,
     }
   }
+}
 
+impl<'a, A: Clone, U: Clone> UserUpdate<'a, A, U> {
   /// ID of the user which can be used when interacting with other APIs.
   pub fn user_id(&mut self, id: &str) -> &mut Self {
     self.user_id = id.to_owned();
@@ -179,21 +181,65 @@ impl<'a, A, U> UserUpdate<'a, A, U> {
   }
 
   /// User metadata to which this user has read-only access.
-  pub fn app_metadata(&mut self, app_metadata: A) -> &mut Self {
-    self.app_metadata = Some(app_metadata);
-    self
+  pub fn app_metadata<AppMetadata>(
+    &self,
+    app_metadata: AppMetadata,
+  ) -> UserUpdate<'a, AppMetadata, U> {
+    UserUpdate {
+      client: self.client,
+      user_id: self.user_id.clone(),
+      blocked: self.blocked,
+      email: self.email.clone(),
+      email_verified: self.email_verified,
+      phone_number: self.phone_number.clone(),
+      phone_verified: self.phone_verified,
+      given_name: self.given_name.clone(),
+      family_name: self.family_name.clone(),
+      name: self.name.clone(),
+      nickname: self.nickname.clone(),
+      picture: self.picture.clone(),
+      password: self.password.clone(),
+      connection: self.connection.clone(),
+      client_id: self.client_id.clone(),
+      verify_email: self.verify_email,
+      verify_phone_number: self.verify_phone_number,
+      app_metadata: Some(app_metadata),
+      user_metadata: self.user_metadata.clone(),
+    }
   }
 
   /// User metadata to which this user has read/write access.
-  pub fn user_metadata(&mut self, user_metadata: U) -> &mut Self {
-    self.user_metadata = Some(user_metadata);
-    self
+  pub fn user_metadata<UserMetadata>(
+    &mut self,
+    user_metadata: UserMetadata,
+  ) -> UserUpdate<'a, A, UserMetadata> {
+    UserUpdate {
+      client: self.client,
+      user_id: self.user_id.clone(),
+      blocked: self.blocked,
+      email: self.email.clone(),
+      email_verified: self.email_verified,
+      phone_number: self.phone_number.clone(),
+      phone_verified: self.phone_verified,
+      given_name: self.given_name.clone(),
+      family_name: self.family_name.clone(),
+      name: self.name.clone(),
+      nickname: self.nickname.clone(),
+      picture: self.picture.clone(),
+      password: self.password.clone(),
+      connection: self.connection.clone(),
+      client_id: self.client_id.clone(),
+      verify_email: self.verify_email,
+      verify_phone_number: self.verify_phone_number,
+      app_metadata: self.app_metadata.clone(),
+      user_metadata: Some(user_metadata),
+    }
   }
 }
 
-impl<'a, A, U> AsRef<Auth0Client> for UserUpdate<'a, A, U> {
-  fn as_ref(&self) -> &Auth0Client {
-    self.client
+impl<'a, A: Serialize, U: Serialize> UserUpdate<'a, A, U> {
+  async fn send<AA, UU>(&self) -> Result<User<AA, UU>, Auth0Error> {
+    self.client.query(self).await
   }
 }
 
