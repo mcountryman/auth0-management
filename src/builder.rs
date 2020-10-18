@@ -38,7 +38,7 @@ impl Auth0Builder {
       RateLimit::new(),
       TokenManager::new(
         client.clone(),
-        &domain.clone(),
+        &domain,
         &audience,
         &client_id,
         &client_secret,
