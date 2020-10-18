@@ -29,16 +29,18 @@
 //! async fn test_users(auth0: &Auth0) {
 //!   // Create a user.
 //!   auth0
-//!     .create_user()
+//!     .users
+//!     .create()
 //!     .email("test@example.test")
 //!     .connection("CONNECTION_ID")
-//!     .send()
+//!     .send::<(), ()>()
 //!     .await
 //!     .expect("Failed to create a user.");
 //!
 //!   // Find first user user sort by email address.
 //!   let users: Vec<User<Metadata, Metadata>> = auth0
-//!     .find_users()
+//!     .users
+//!     .find()
 //!     .page(0)
 //!     .per_page(1)
 //!     .sort("email", Ordering::Ascending)
@@ -48,14 +50,15 @@
 //!
 //!   // Update found user.
 //!   auth0
-//!     .update_user(
+//!     .users
+//!     .update(
 //!       &users
 //!         .first()
 //!         .expect("No users found")
 //!         .user_id
 //!     )
 //!     .email("test@test.test")
-//!     .send()
+//!     .send::<(), ()>()
 //!     .await
 //!     .expect("Failed to update user.");
 //! }
