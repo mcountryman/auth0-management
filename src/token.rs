@@ -1,12 +1,12 @@
 use std::error::Error;
+use std::ops::Deref;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{Duration, SystemTime, SystemTimeError};
 
 use async_mutex::Mutex;
 use reqwest::{Client, StatusCode};
 use serde::export::Formatter;
 use serde::{Deserialize, Serialize};
-use std::ops::Deref;
-use std::sync::atomic::{AtomicU64, Ordering};
 
 /// Auth0 OAuth token.
 #[derive(Deserialize)]
@@ -41,9 +41,10 @@ struct TokenErrorResponse {
 }
 
 /// Provides oauth token retrieval and expiration checks.
+#[derive(Debug)]
 pub struct TokenManager {
   client: Client,
-  pub(crate) domain: String,
+  domain: String,
 
   token: Mutex<Option<String>>,
   token_opts: TokenOpts,

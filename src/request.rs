@@ -1,34 +1,52 @@
 use async_trait::async_trait;
-use reqwest::{Method, RequestBuilder};
+use reqwest::RequestBuilder;
 use serde::de::DeserializeOwned;
 
-use crate::client::Auth0Error;
-use crate::Auth0Client;
+use crate::{Auth0Client, Auth0Result};
 
-/// Provides ability for request to send and retrieve response.
+/// Request
 #[async_trait]
-pub trait Auth0Request: Auth0RequestBuilder + Send + Sync {
-  /// Send request and retrieve response.
-  async fn send(&self) -> Result<Self::Response, Auth0Error>;
+pub trait Auth0Request {
+  /// Send request
+  async fn send<T>(&self) -> Auth0Result<T>
+  where
+    T: DeserializeOwned + Send + Sync;
+}
+
+/// Simple request
+#[async_trait]
+pub trait Auth0RequestSimple {
+  /// Send request to client
+  async fn send_to<T>(&self, client: &Auth0Client) -> Auth0Result<T>
+  where
+    T: DeserializeOwned + Send + Sync;
+}
+
+/// Request builder
+pub trait Auth0RequestBuilder {
+  /// Build request
+  fn build(&self, client: &Auth0Client) -> RequestBuilder;
 }
 
 #[async_trait]
-impl<A: AsRef<Auth0Client> + Auth0RequestBuilder + Send + Sync> Auth0Request for A {
-  async fn send(&self) -> Result<A::Response, Auth0Error> {
-    self.as_ref().query(self).await
+impl<A: Auth0RequestBuilder + Send + Sync> Auth0RequestSimple for A {
+  async fn send_to<T>(&self, client: &Auth0Client) -> Auth0Result<T>
+  where
+    T: DeserializeOwned + Send + Sync,
+  {
+    client.send(self.build(&client)).await
   }
 }
 
-/// Builds request without absolute URI.
-pub trait Auth0RequestBuilder {
-  /// The response type.
-  type Response: DeserializeOwned;
-
-  /// Build relative request.
-  ///
-  /// # Arguments
-  /// * `factory` - The absolute request builder factory.
-  fn build<F>(&self, factory: F) -> RequestBuilder
+#[async_trait]
+impl<A: Auth0RequestBuilder + AsRef<Auth0Client> + Sync + Send> Auth0Request for A {
+  async fn send<T>(&self) -> Auth0Result<T>
   where
-    F: FnOnce(Method, &str) -> RequestBuilder;
+    T: DeserializeOwned + Send + Sync,
+  {
+    let client = self.as_ref();
+    let req = self.build(&client);
+
+    client.send(req).await
+  }
 }

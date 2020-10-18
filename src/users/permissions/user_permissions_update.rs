@@ -1,8 +1,9 @@
 //! Assign permissions to a user.
 
+use reqwest::{Method, RequestBuilder};
+
 use crate::Permission;
 use crate::{Auth0Client, Auth0RequestBuilder};
-use reqwest::{Method, RequestBuilder};
 
 /// Assign user permissions.
 ///
@@ -60,17 +61,13 @@ impl<'a> AsRef<Auth0Client> for UserPermissionsUpdate<'a> {
 }
 
 impl<'a> Auth0RequestBuilder for UserPermissionsUpdate<'a> {
-  type Response = ();
-
-  fn build<F>(&self, factory: F) -> RequestBuilder
-  where
-    F: FnOnce(Method, &str) -> RequestBuilder,
-  {
-    factory(
-      Method::POST,
-      &format!("api/v2/users/{}/permissions", self.id),
-    )
-    .json(&self.permissions)
+  fn build(&self, client: &Auth0Client) -> RequestBuilder {
+    client
+      .begin(
+        Method::POST,
+        &format!("api/v2/users/{}/permissions", self.id),
+      )
+      .json(&self.permissions)
   }
 }
 

@@ -9,6 +9,7 @@ use serde::export::Formatter;
 use std::sync::atomic::{AtomicU32, AtomicU64, Ordering};
 
 /// Provides ability to read rate limit headers and check if limits are exceeded.
+#[derive(Debug)]
 pub struct RateLimit {
   limit: AtomicU32,
   reset: AtomicU64,

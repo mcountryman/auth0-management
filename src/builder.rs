@@ -34,19 +34,20 @@ impl Auth0Builder {
     let client_secret = self
       .client_secret
       .ok_or(Auth0BuilderError::MissingClientSecret)?;
-    let client = Auth0Client {
-      rate: RateLimit::new(),
-      token: TokenManager::new(
+    let client = Auth0Client::new(
+      RateLimit::new(),
+      TokenManager::new(
         client.clone(),
-        &domain,
+        &domain.clone(),
         &audience,
         &client_id,
         &client_secret,
       ),
       client,
-    };
+      &domain,
+    );
 
-    Ok(Auth0(client))
+    Ok(Auth0::new(client))
   }
 
   /// The auth0 tenant domain.

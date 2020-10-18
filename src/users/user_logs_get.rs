@@ -94,7 +94,7 @@ pub struct UserLogsGet<'a> {
 
 impl<'a> UserLogsGet<'a> {
   /// Create [GetUserLogs] request.
-  pub fn new<S: AsRef<String>>(client: &'a Auth0Client, id: S) -> Self {
+  pub fn new<S: AsRef<str>>(client: &'a Auth0Client, id: S) -> Self {
     Self {
       client,
 
@@ -124,12 +124,9 @@ impl<'a> AsRef<Auth0Client> for UserLogsGet<'a> {
 }
 
 impl<'a> Auth0RequestBuilder for UserLogsGet<'a> {
-  type Response = Vec<UserLog>;
-
-  fn build<F>(&self, factory: F) -> RequestBuilder
-  where
-    F: FnOnce(Method, &str) -> RequestBuilder,
-  {
-    factory(Method::GET, &format!("api/v2/users/{}/logs", self.id)).query(&self)
+  fn build(&self, client: &Auth0Client) -> RequestBuilder {
+    client
+      .begin(Method::GET, &format!("api/v2/users/{}/logs", self.id))
+      .query(&self)
   }
 }

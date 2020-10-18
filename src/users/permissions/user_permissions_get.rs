@@ -1,8 +1,8 @@
 //! Retrieve all permissions associated with the user.
 use reqwest::{Method, RequestBuilder};
 
+use crate::Page;
 use crate::{Auth0Client, Auth0RequestBuilder};
-use crate::{Page, Permission};
 
 /// Provides data for get user permissions request.
 ///
@@ -45,16 +45,12 @@ impl<'a> AsRef<Auth0Client> for UserPermissionsGet<'a> {
 }
 
 impl<'a> Auth0RequestBuilder for UserPermissionsGet<'a> {
-  type Response = Vec<Permission>;
-
-  fn build<F>(&self, factory: F) -> RequestBuilder
-  where
-    F: FnOnce(Method, &str) -> RequestBuilder,
-  {
-    factory(
-      Method::GET,
-      &format!("api/v2/users/{}/permissions", self.id),
-    )
-    .query(&self.page)
+  fn build(&self, client: &Auth0Client) -> RequestBuilder {
+    client
+      .begin(
+        Method::GET,
+        &format!("api/v2/users/{}/permissions", self.id),
+      )
+      .query(&self.page)
   }
 }

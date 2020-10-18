@@ -56,16 +56,12 @@ impl<'a> AsRef<Auth0Client> for UserPermissionsDelete<'a> {
 }
 
 impl<'a> Auth0RequestBuilder for UserPermissionsDelete<'a> {
-  type Response = ();
-
-  fn build<F>(&self, factory: F) -> RequestBuilder
-  where
-    F: FnOnce(Method, &str) -> RequestBuilder,
-  {
-    factory(
-      Method::DELETE,
-      &format!("api/v2/users/{}/permissions", self.id),
-    )
-    .json(&self.permissions)
+  fn build(&self, client: &Auth0Client) -> RequestBuilder {
+    client
+      .begin(
+        Method::DELETE,
+        &format!("api/v2/users/{}/permissions", self.id),
+      )
+      .json(&self.permissions)
   }
 }

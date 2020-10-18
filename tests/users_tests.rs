@@ -1,7 +1,8 @@
 use serde::{Deserialize, Serialize};
 
+use auth0_management::{Ordering, Pageable, Sortable};
+
 use crate::helpers::get_client;
-use auth0_management::{Auth0Request, Ordering, Pageable, Sortable, User};
 
 mod helpers;
 
@@ -13,32 +14,38 @@ async fn test_find_user() {
   let auth0 = get_client();
 
   // Create a user.
-  auth0
-    .create_user::<Metadata, Metadata>()
+  let user = auth0
+    .users
+    .create()
     .email("test@example.test")
     .password("Th!5!s4P445w3rd")
     .connection("Username-Password-Authentication")
-    .send()
+    .send::<Metadata, Metadata>()
     .await
     .expect("Failed to create a user.");
 
   // Find first user user sort by email address.
-  let users: Vec<User<Metadata, Metadata>> = auth0
-    .find_users()
+  let _users = auth0
+    .users
+    .find()
     .page(0)
-    .per_page(1)
     .sort("email", Ordering::Ascending)
-    .send()
+    .send::<Metadata, Metadata>()
     .await
     .expect("Failed to fetch users.");
 
   // Update found user.
   auth0
-    .update_user::<Metadata, Metadata, &str>(
-      &users.first().expect("No users found").user_id,
-    )
+    .users
+    .update(&user.user_id)
     .email("test@test.test")
-    .send()
+    .send::<Metadata, Metadata>()
     .await
     .expect("Failed to update user.");
+
+  auth0
+    .users
+    .delete(&user.user_id)
+    .await
+    .expect("Failed to delete user.");
 }

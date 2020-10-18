@@ -1,10 +1,10 @@
 //! Update a user.
-use reqwest::{Method, RequestBuilder};
+use reqwest::Method;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
 use crate::users::User;
-use crate::{Auth0Client, Auth0Error, Auth0RequestBuilder};
+use crate::{Auth0Client, Auth0Result};
 
 /// Update a user.
 #[derive(Serialize)]
@@ -237,21 +237,23 @@ impl<'a, A: Clone, U: Clone> UserUpdate<'a, A, U> {
   }
 }
 
-impl<'a, A: Serialize, U: Serialize> UserUpdate<'a, A, U> {
-  async fn send<AA, UU>(&self) -> Result<User<AA, UU>, Auth0Error> {
-    self.client.query(self).await
-  }
-}
-
-impl<'a, A: Serialize + DeserializeOwned, U: Serialize + DeserializeOwned>
-  Auth0RequestBuilder for UserUpdate<'a, A, U>
-{
-  type Response = User<A, U>;
-
-  fn build<F>(&self, factory: F) -> RequestBuilder
+impl<'a, AIn, UIn> UserUpdate<'a, AIn, UIn> {
+  /// Send
+  pub async fn send<AOut, UOut>(&self) -> Auth0Result<User<AOut, UOut>>
   where
-    F: FnOnce(Method, &str) -> RequestBuilder,
+    AIn: Serialize,
+    UIn: Serialize,
+    AOut: DeserializeOwned,
+    UOut: DeserializeOwned,
   {
-    factory(Method::DELETE, &format!("api/v2/users/{}", self.user_id)).json(self)
+    self
+      .client
+      .send(
+        self
+          .client
+          .begin(Method::PATCH, &format!("api/v2/users/{}", self.user_id))
+          .json(self),
+      )
+      .await
   }
 }

@@ -25,5 +25,4 @@ chrono = { version = "0.4", features = ["serde"] }
 async-mutex = "1.4"
 
 [dev-dependencies]
-hyper = "*"
 tokio = { version = "*", features = ["macros"] }

@@ -5,7 +5,7 @@ use chrono::{DateTime, Utc};
 use reqwest::{Method, RequestBuilder};
 use serde::Deserialize;
 
-use crate::Auth0RequestBuilder;
+use crate::{Auth0Client, Auth0RequestBuilder};
 
 /// Multi-factor enrollment.
 #[derive(Debug, Clone, Deserialize)]
@@ -41,7 +41,7 @@ pub struct UserEnrollmentsGet {
 
 impl UserEnrollmentsGet {
   /// Create user enrollments request.
-  pub fn new<S: AsRef<String>>(id: S) -> Self {
+  pub fn new<S: AsRef<str>>(id: S) -> Self {
     Self {
       id: id.as_ref().to_owned(),
     }
@@ -49,13 +49,8 @@ impl UserEnrollmentsGet {
 }
 
 impl Auth0RequestBuilder for UserEnrollmentsGet {
-  type Response = Vec<UserEnrollment>;
-
-  fn build<F>(&self, factory: F) -> RequestBuilder
-  where
-    F: FnOnce(Method, &str) -> RequestBuilder,
-  {
-    factory(
+  fn build(&self, client: &Auth0Client) -> RequestBuilder {
+    client.begin(
       Method::GET,
       &format!("api/v2/users/{}/enrollments", self.id),
     )
