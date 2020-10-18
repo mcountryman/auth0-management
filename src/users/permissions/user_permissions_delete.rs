@@ -3,34 +3,28 @@
 use reqwest::{Method, RequestBuilder};
 
 use crate::Permission;
-use crate::RelativeRequestBuilder;
+use crate::{Auth0Client, Auth0RequestBuilder};
 
 /// Provides data for creating delete user permission request.
 ///
 /// # Scopes
 /// * `update:users`
-///
-/// # Example
-/// ```
-/// use auth0_management::UserPermissionsDelete;
-///
-/// async fn delete_permissions() {
-///   UserPermissionsDelete::new("USER_ID")
-///     .permissions(Vec::new());
-/// }
-/// ```
-pub struct UserPermissionsDelete {
+pub struct UserPermissionsDelete<'a> {
+  client: &'a Auth0Client,
+
   id: String,
   permissions: Vec<Permission>,
 }
 
-impl UserPermissionsDelete {
+impl<'a> UserPermissionsDelete<'a> {
   /// Create permission delete request.
   ///
   /// # Arguments
   /// * `id` - The id of the user.
-  pub fn new(id: &str) -> Self {
+  pub fn new(client: &'a Auth0Client, id: &str) -> Self {
     Self {
+      client,
+
       id: id.to_owned(),
       permissions: Vec::new(),
     }
@@ -55,17 +49,19 @@ impl UserPermissionsDelete {
   }
 }
 
-impl RelativeRequestBuilder for UserPermissionsDelete {
-  type Response = ();
+impl<'a> AsRef<Auth0Client> for UserPermissionsDelete<'a> {
+  fn as_ref(&self) -> &Auth0Client {
+    self.client
+  }
+}
 
-  fn build<F>(&self, factory: F) -> RequestBuilder
-  where
-    F: FnOnce(Method, &str) -> RequestBuilder,
-  {
-    factory(
-      Method::DELETE,
-      &format!("api/v2/users/{}/permissions", self.id),
-    )
-    .json(&self.permissions)
+impl<'a> Auth0RequestBuilder for UserPermissionsDelete<'a> {
+  fn build(&self, client: &Auth0Client) -> RequestBuilder {
+    client
+      .begin(
+        Method::DELETE,
+        &format!("api/v2/users/{}/permissions", self.id),
+      )
+      .json(&self.permissions)
   }
 }

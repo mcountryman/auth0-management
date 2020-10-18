@@ -1,21 +1,18 @@
 //! Create a new user.
-use reqwest::{Method, RequestBuilder};
+use reqwest::Method;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
 use crate::users::User;
-use crate::RelativeRequestBuilder;
+use crate::{Auth0Client, Auth0Result};
 
 /// Create a new user for a given [database](https://auth0.com/docs/connections/database) or
 /// [passwordless](https://auth0.com/docs/connections/passwordless) connection.
-///
-/// Note: connection is required but other parameters such as email and password are dependent
-/// upon the type of connection.
-///
-/// # Scopes
-/// * `create:users`
-#[derive(Serialize)]
-pub struct UserCreate<AppMetadata, UserMetadata> {
+#[derive(Serialize, Clone, Debug)]
+pub struct UserCreate<'a, A, U> {
+  #[serde(skip_serializing)]
+  client: &'a Auth0Client,
+
   #[serde(skip_serializing_if = "Option::is_none")]
   email: Option<String>,
   #[serde(skip_serializing_if = "Option::is_none")]
@@ -48,17 +45,44 @@ pub struct UserCreate<AppMetadata, UserMetadata> {
   username: Option<String>,
 
   #[serde(skip_serializing_if = "Option::is_none")]
-  app_metadata: Option<AppMetadata>,
+  app_metadata: Option<A>,
   #[serde(skip_serializing_if = "Option::is_none")]
-  user_metadata: Option<UserMetadata>,
+  user_metadata: Option<U>,
 }
 
-impl<AppMetadata, UserMetadata> UserCreate<AppMetadata, UserMetadata> {
+impl<'a> UserCreate<'a, (), ()> {
   /// Create create user request.
-  pub fn new() -> Self {
-    Default::default()
-  }
+  pub fn new(client: &'a Auth0Client) -> Self {
+    Self {
+      client,
 
+      email: None,
+      phone_number: None,
+      blocked: None,
+      email_verified: None,
+      phone_verified: None,
+      given_name: None,
+      family_name: None,
+      name: None,
+      nickname: None,
+      picture: None,
+      user_id: None,
+      connection: None,
+      password: None,
+      verify_email: None,
+      username: None,
+
+      app_metadata: None,
+      user_metadata: None,
+    }
+  }
+}
+
+impl<'a, A, U> UserCreate<'a, A, U>
+where
+  A: Clone,
+  U: Clone,
+{
   /// The user's email.
   pub fn email(&mut self, email: &str) -> &mut Self {
     self.email = Some(email.to_owned());
@@ -153,54 +177,72 @@ impl<AppMetadata, UserMetadata> UserCreate<AppMetadata, UserMetadata> {
   }
 
   /// Data related to the user that does affect the application's core functionality.
-  pub fn app_metadata(&mut self, app_metadata: AppMetadata) -> &mut Self {
-    self.app_metadata = Some(app_metadata);
-    self
+  pub fn app_metadata<AppMetadata: Clone>(
+    &mut self,
+    app_metadata: AppMetadata,
+  ) -> UserCreate<'a, AppMetadata, U> {
+    UserCreate {
+      client: self.client,
+      email: self.email.clone(),
+      phone_number: self.phone_number.clone(),
+      blocked: self.blocked,
+      email_verified: self.email_verified,
+      phone_verified: self.phone_verified,
+      given_name: self.given_name.clone(),
+      family_name: self.family_name.clone(),
+      name: self.name.clone(),
+      nickname: self.nickname.clone(),
+      picture: self.picture.clone(),
+      user_id: self.user_id.clone(),
+      connection: self.connection.clone(),
+      password: self.password.clone(),
+      verify_email: self.verify_email,
+      username: self.username.clone(),
+      app_metadata: Some(app_metadata),
+      user_metadata: self.user_metadata.clone(),
+    }
   }
 
   /// Data related to the user that does not affect the application's core functionality.
-  pub fn user_metadata(&mut self, user_metadata: UserMetadata) -> &mut Self {
-    self.user_metadata = Some(user_metadata);
-    self
-  }
-}
-
-impl<AppMetadata, UserMetadata> Default for UserCreate<AppMetadata, UserMetadata> {
-  fn default() -> Self {
-    Self {
-      email: None,
-      phone_number: None,
-      blocked: None,
-      email_verified: None,
-      phone_verified: None,
-      given_name: None,
-      family_name: None,
-      name: None,
-      nickname: None,
-      picture: None,
-      user_id: None,
-      connection: None,
-      password: None,
-      verify_email: None,
-      username: None,
-
-      app_metadata: Default::default(),
-      user_metadata: Default::default(),
+  pub fn user_metadata<UserMetadata: Clone>(
+    &mut self,
+    user_metadata: UserMetadata,
+  ) -> UserCreate<'a, A, UserMetadata> {
+    UserCreate {
+      client: self.client,
+      email: self.email.clone(),
+      phone_number: self.phone_number.clone(),
+      blocked: self.blocked,
+      email_verified: self.email_verified,
+      phone_verified: self.phone_verified,
+      given_name: self.given_name.clone(),
+      family_name: self.family_name.clone(),
+      name: self.name.clone(),
+      nickname: self.nickname.clone(),
+      picture: self.picture.clone(),
+      user_id: self.user_id.clone(),
+      connection: self.connection.clone(),
+      password: self.password.clone(),
+      verify_email: self.verify_email,
+      username: self.username.clone(),
+      app_metadata: self.app_metadata.clone(),
+      user_metadata: Some(user_metadata),
     }
   }
 }
 
-impl<
-    AppMetadata: Serialize + DeserializeOwned,
-    UserMetadata: Serialize + DeserializeOwned,
-  > RelativeRequestBuilder for UserCreate<AppMetadata, UserMetadata>
-{
-  type Response = User<AppMetadata, UserMetadata>;
-
-  fn build<F>(&self, factory: F) -> RequestBuilder
+impl<'a, AIn, UIn> UserCreate<'a, AIn, UIn> {
+  /// Send
+  pub async fn send<AOut, UOut>(&self) -> Auth0Result<User<AOut, UOut>>
   where
-    F: FnOnce(Method, &str) -> RequestBuilder,
+    AIn: Serialize,
+    UIn: Serialize,
+    AOut: DeserializeOwned,
+    UOut: DeserializeOwned,
   {
-    factory(Method::POST, "api/v2/users").json(&self)
+    self
+      .client
+      .send(self.client.begin(Method::POST, "api/v2/users").json(self))
+      .await
   }
 }
