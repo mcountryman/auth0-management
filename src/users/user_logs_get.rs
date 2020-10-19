@@ -4,8 +4,8 @@ use reqwest::{Method, RequestBuilder};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use crate::RelativeRequestBuilder;
-use crate::{Page, Sort, User};
+use crate::{Auth0Client, Auth0RequestBuilder};
+use crate::{Page, Sort};
 
 /// User log event.
 #[derive(Debug, Deserialize)]
@@ -79,41 +79,11 @@ pub struct UserLogLocationInfo {
 }
 
 /// Retrieve log events for a specific user.
-///
-/// Note: For more information on all possible event types, their respective acronyms and
-/// descriptions, see [Log Data Event Listing](https://auth0.com/docs/logs#log-data-event-listing).
-///
-/// For more information on the list of fields that can be used in `sort`, see
-/// [Searchable Fields](https://auth0.com/docs/logs/query-syntax#searchable-fields).
-///
-/// Auth0 [limits the number of logs](https://auth0.com/docs/logs#limitations) you can
-/// return by search criteria to 100 logs per request. Furthermore, you may only paginate
-/// through up to 1,000 search results. If you exceed this threshold, please redefine your
-/// search.
-///
-/// # Scopes
-/// * `read:logs`
-/// * `read:logs_users`
-///
-/// # Example
-/// ```
-/// use auth0_management::{Auth0, User, UserLogsGet, Ordering, Pageable, Sortable};
-///  
-/// async fn dump_logs<A, U>(client: &mut Auth0, user: &User<A, U>) {
-///   let logs = client.query(
-///     UserLogsGet::from(user)
-///       .sort("date", Ordering::Ascending)
-///       .per_page(100)
-///   ).await.unwrap();
-///
-///   for log in logs {
-///     println!("kind: {}", log.kind);
-///     println!("date: {}", log.date);
-///   }
-/// }
-/// ```
 #[derive(Serialize)]
-pub struct UserLogsGet {
+pub struct UserLogsGet<'a> {
+  #[serde(skip_serializing)]
+  client: &'a Auth0Client,
+
   #[serde(skip)]
   id: String,
   #[serde(flatten)]
@@ -122,42 +92,41 @@ pub struct UserLogsGet {
   sort: Sort,
 }
 
-impl UserLogsGet {
+impl<'a> UserLogsGet<'a> {
   /// Create [GetUserLogs] request.
-  pub fn new(id: &str) -> Self {
+  pub fn new<S: AsRef<str>>(client: &'a Auth0Client, id: S) -> Self {
     Self {
-      id: id.to_owned(),
+      client,
+
+      id: id.as_ref().to_string(),
       page: Default::default(),
       sort: Default::default(),
     }
   }
 }
 
-impl<A, U> From<&User<A, U>> for UserLogsGet {
-  fn from(user: &User<A, U>) -> Self {
-    UserLogsGet::new(&user.user_id)
-  }
-}
-
-impl AsMut<Page> for UserLogsGet {
+impl<'a> AsMut<Page> for UserLogsGet<'a> {
   fn as_mut(&mut self) -> &mut Page {
     &mut self.page
   }
 }
 
-impl AsMut<Sort> for UserLogsGet {
+impl<'a> AsMut<Sort> for UserLogsGet<'a> {
   fn as_mut(&mut self) -> &mut Sort {
     &mut self.sort
   }
 }
 
-impl RelativeRequestBuilder for UserLogsGet {
-  type Response = Vec<UserLog>;
+impl<'a> AsRef<Auth0Client> for UserLogsGet<'a> {
+  fn as_ref(&self) -> &Auth0Client {
+    self.client
+  }
+}
 
-  fn build<F>(&self, factory: F) -> RequestBuilder
-  where
-    F: FnOnce(Method, &str) -> RequestBuilder,
-  {
-    factory(Method::GET, &format!("api/v2/users/{}/logs", self.id)).query(&self)
+impl<'a> Auth0RequestBuilder for UserLogsGet<'a> {
+  fn build(&self, client: &Auth0Client) -> RequestBuilder {
+    client
+      .begin(Method::GET, &format!("api/v2/users/{}/logs", self.id))
+      .query(&self)
   }
 }

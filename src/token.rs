@@ -1,6 +1,9 @@
 use std::error::Error;
-use std::time::{SystemTime, SystemTimeError};
+use std::ops::Deref;
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::time::{Duration, SystemTime, SystemTimeError};
 
+use async_mutex::Mutex;
 use reqwest::{Client, StatusCode};
 use serde::export::Formatter;
 use serde::{Deserialize, Serialize};
@@ -38,13 +41,14 @@ struct TokenErrorResponse {
 }
 
 /// Provides oauth token retrieval and expiration checks.
+#[derive(Debug)]
 pub struct TokenManager {
   client: Client,
-  pub(crate) domain: String,
+  domain: String,
 
-  pub token: Option<Token>,
+  token: Mutex<Option<String>>,
   token_opts: TokenOpts,
-  pub token_last: SystemTime,
+  token_expiration: AtomicU64,
 }
 
 impl TokenManager {
@@ -59,37 +63,39 @@ impl TokenManager {
     Self {
       client,
       domain: domain.to_owned(),
-      token: None,
+      token: Mutex::new(None),
       token_opts: TokenOpts {
         audience: audience.to_owned(),
         grant_type: "client_credentials".to_owned(),
         client_id: client_id.to_owned(),
         client_secret: client_secret.to_owned(),
       },
-      token_last: SystemTime::UNIX_EPOCH,
+      token_expiration: AtomicU64::new(0),
     }
   }
 
   /// Gets valid encoded JWT token.
-  pub async fn get_token(&mut self) -> Result<String, TokenError> {
-    match &self.token {
-      None => Ok(self.fetch_token().await?),
-      Some(token) => {
-        let elapsed = SystemTime::now()
-          .duration_since(self.token_last)
-          .map_err(TokenError::Time)?;
+  pub async fn get_token(&self) -> Result<String, TokenError> {
+    let now = SystemTime::now();
+    let expiration = SystemTime::UNIX_EPOCH
+      + Duration::from_secs(self.token_expiration.load(Ordering::SeqCst));
 
-        if elapsed.as_secs() > token.expires_in {
-          Ok(self.fetch_token().await?)
-        } else {
-          Ok(self.token.as_ref().unwrap().access_token.to_owned())
-        }
+    if now > expiration {
+      return self.fetch_token().await;
+    }
+
+    {
+      let token = self.token.lock().await;
+      if let Some(token) = token.deref() {
+        return Ok(token.to_string());
       }
     }
+
+    self.fetch_token().await
   }
 
   /// Gets new encoded JWT token from auth0.
-  async fn fetch_token(&mut self) -> Result<String, TokenError> {
+  async fn fetch_token(&self) -> Result<String, TokenError> {
     let res = self
       .client
       .post(&format!("https://{}/oauth/token", self.domain))
@@ -101,12 +107,18 @@ impl TokenManager {
       return Err(res.json::<TokenErrorResponse>().await?.into());
     }
 
-    let token = res.json().await?;
+    let token: Token = res.json().await?;
 
-    self.token = Some(token);
-    self.token_last = SystemTime::now();
+    *self.token.lock().await = Some(token.access_token.clone());
+    self.token_expiration.store(
+      (SystemTime::now() + Duration::from_secs(token.expires_in))
+        .duration_since(SystemTime::UNIX_EPOCH)
+        .expect("Time went backwards")
+        .as_secs(),
+      Ordering::SeqCst,
+    );
 
-    Ok(self.token.as_ref().unwrap().access_token.to_owned())
+    Ok(token.access_token)
   }
 }
 

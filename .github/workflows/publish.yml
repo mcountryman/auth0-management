@@ -1,5 +1,5 @@
 on:
-  pull_request:
+  push:
     branches:
       - master
 
@@ -36,7 +36,7 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           cargo login "$CRATES_TOKEN"
-          cargo install cargo-release
+          cargo install cargo-release || true
         env:
           CRATES_TOKEN: ${{ secrets.CRATES_TOKEN }}
 

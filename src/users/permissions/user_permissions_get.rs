@@ -1,10 +1,8 @@
 //! Retrieve all permissions associated with the user.
-use std::ops::{Deref, DerefMut};
-
 use reqwest::{Method, RequestBuilder};
 
-use crate::RelativeRequestBuilder;
-use crate::{Page, Permission, User};
+use crate::Page;
+use crate::{Auth0Client, Auth0RequestBuilder};
 
 /// Provides data for get user permissions request.
 ///
@@ -15,58 +13,44 @@ use crate::{Page, Permission, User};
 /// ```
 /// async fn dump_permissions() {}
 /// ```
-pub struct UserPermissionsGet {
+pub struct UserPermissionsGet<'a> {
+  client: &'a Auth0Client,
+
   id: String,
   page: Page,
 }
 
-impl UserPermissionsGet {
+impl<'a> UserPermissionsGet<'a> {
   /// Create get user permissions request.
-  pub fn new(id: &str) -> Self {
+  pub fn new(client: &'a Auth0Client, id: &str) -> Self {
     Self {
+      client,
+
       id: id.to_owned(),
       page: Default::default(),
     }
   }
 }
 
-impl Deref for UserPermissionsGet {
-  type Target = Page;
-
-  fn deref(&self) -> &Self::Target {
-    &self.page
-  }
-}
-
-impl DerefMut for UserPermissionsGet {
-  fn deref_mut(&mut self) -> &mut Self::Target {
+impl<'a> AsMut<Page> for UserPermissionsGet<'a> {
+  fn as_mut(&mut self) -> &mut Page {
     &mut self.page
   }
 }
 
-impl<A, U> From<User<A, U>> for UserPermissionsGet {
-  fn from(user: User<A, U>) -> Self {
-    Self::new(&user.user_id)
+impl<'a> AsRef<Auth0Client> for UserPermissionsGet<'a> {
+  fn as_ref(&self) -> &Auth0Client {
+    self.client
   }
 }
 
-impl<A, U> From<&User<A, U>> for UserPermissionsGet {
-  fn from(user: &User<A, U>) -> Self {
-    Self::new(&user.user_id)
-  }
-}
-
-impl RelativeRequestBuilder for UserPermissionsGet {
-  type Response = Vec<Permission>;
-
-  fn build<F>(&self, factory: F) -> RequestBuilder
-  where
-    F: FnOnce(Method, &str) -> RequestBuilder,
-  {
-    factory(
-      Method::GET,
-      &format!("api/v2/users/{}/permissions", self.id),
-    )
-    .query(&self.page)
+impl<'a> Auth0RequestBuilder for UserPermissionsGet<'a> {
+  fn build(&self, client: &Auth0Client) -> RequestBuilder {
+    client
+      .begin(
+        Method::GET,
+        &format!("api/v2/users/{}/permissions", self.id),
+      )
+      .query(&self.page)
   }
 }

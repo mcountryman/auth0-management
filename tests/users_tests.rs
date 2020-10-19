@@ -1,79 +1,51 @@
 use serde::{Deserialize, Serialize};
 
-use auth0_management::{
-  Ordering, Pageable, Sortable, UserEnrollmentsGet, UserLogsGet, UserPermissionsGet,
-  UsersFind,
-};
+use auth0_management::{Ordering, Pageable, Sortable};
 
 use crate::helpers::get_client;
 
 mod helpers;
 
 #[derive(Serialize, Deserialize, Debug)]
-struct AppData;
-
-#[derive(Serialize, Deserialize, Debug)]
-struct UserData;
+struct Metadata;
 
 #[tokio::test]
 async fn test_find_user() {
-  let mut client = get_client();
-  let users = client
-    .query(
-      UsersFind::<AppData, UserData>::new() //
-        .sort("username", Ordering::Ascending)
-        .page(0)
-        .per_page(10),
-    )
-    .await
-    .unwrap();
+  let auth0 = get_client();
 
-  let _logs = client
-    .query(UserLogsGet::from(users.first().unwrap()).per_page(100))
+  // Create a user.
+  let user = auth0
+    .users
+    .create()
+    .email("test@example.test")
+    .password("Th!5!s4P445w3rd")
+    .connection("Username-Password-Authentication")
+    .send::<Metadata, Metadata>()
     .await
-    .unwrap();
+    .expect("Failed to create a user.");
 
-  let _enrollments = client
-    .query(&UserEnrollmentsGet::from(users.first().unwrap()))
+  // Find first user user sort by email address.
+  let _users = auth0
+    .users
+    .find()
+    .page(0)
+    .sort("email", Ordering::Ascending)
+    .send::<Metadata, Metadata>()
     .await
-    .unwrap();
+    .expect("Failed to fetch users.");
 
-  let permissions = client
-    .query(&UserPermissionsGet::from(users.first().unwrap()))
+  // Update found user.
+  auth0
+    .users
+    .update(&user.user_id)
+    .email("test@test.test")
+    .send::<Metadata, Metadata>()
     .await
-    .unwrap();
+    .expect("Failed to update user.");
 
-  for p in permissions {
-    println!("{:?}", p)
-  }
+  auth0
+    .users
+    .delete(&user.user_id)
+    .await
+    .expect("Failed to delete user.");
 }
-
-// #[tokio::test]
-// async fn test_create_read_update_delete_user() {
-//   let mut client = get_client();
-//   let user = client
-//     .create_user(
-//       UserCreateOpts::<AppData, UserData>::new()
-//         .name("test_user")
-//         .email("test_user@example.com")
-//         .given_name("Test")
-//         .family_name("User")
-//         .password("Testing1234!")
-//         .connection("Username-Password-Authentication"),
-//     )
-//     .await
-//     .unwrap();
-//
-//   let mut user: User<AppData, UserData> =
-//     client.get_user(&user.user_id).await.unwrap().unwrap();
-//
-//   let id = user.user_id.to_owned();
-//
-//   user.name = "test".to_owned();
-//
-//   let update_result = client.update_user(user).await;
-//
-//   client.delete_user(&id).await.unwrap();
-//
-//   update_result.unwrap();
-// }

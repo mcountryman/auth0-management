@@ -1,32 +1,17 @@
 //! Update a user.
-use reqwest::{Method, RequestBuilder};
+use reqwest::Method;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
 use crate::users::User;
-use crate::RelativeRequestBuilder;
+use crate::{Auth0Client, Auth0Result};
 
 /// Update a user.
-/// Some considerations:
-///
-/// * The properties of the new object will replace the old ones.
-/// * The metadata fields are an exception to this rule (`user_metadata` and `app_metadata`). These
-/// properties are merged instead of being replaced but be careful, the merge only occurs on the
-/// first level.
-/// * If you are updating `email`, `email_verified`, `phone_number`, `phone_verified`, `username` or
-/// `password` of a secondary identity, you need to specify the connection property too.
-/// * If you are updating `email` or `phone_number` you can specify, optionally, the `client_id`
-/// property.
-/// * Updating `email_verified` is not supported for enterprise and passwordless sms connections.
-/// * Updating the `blocked` to `false` does not affect the user's blocked state from an excessive
-/// amount of incorrectly provided credentials. Use the "Unblock a user" endpoint from the
-/// "User Blocks" API to change the user's state.
-///
-/// # Scopes
-/// * `update:users`
-/// * `update:users_app_metadata`
 #[derive(Serialize)]
-pub struct UserUpdate<AppMetadata, UserMetadata> {
+pub struct UserUpdate<'a, A, U> {
+  #[serde(skip_serializing)]
+  client: &'a Auth0Client,
+
   #[serde(skip_serializing)]
   user_id: String,
   #[serde(skip_serializing_if = "Option::is_none")]
@@ -61,16 +46,18 @@ pub struct UserUpdate<AppMetadata, UserMetadata> {
   verify_phone_number: Option<bool>,
 
   #[serde(skip_serializing_if = "Option::is_none")]
-  app_metadata: Option<AppMetadata>,
+  app_metadata: Option<A>,
   #[serde(skip_serializing_if = "Option::is_none")]
-  user_metadata: Option<UserMetadata>,
+  user_metadata: Option<U>,
 }
 
-impl<AppMetadata, UserMetadata> UserUpdate<AppMetadata, UserMetadata> {
+impl<'a> UserUpdate<'a, (), ()> {
   /// Create update user request.
-  pub fn new(id: &str) -> Self {
+  pub fn new<S: AsRef<str>>(client: &'a Auth0Client, id: S) -> Self {
     Self {
-      user_id: id.to_owned(),
+      client,
+
+      user_id: id.as_ref().to_string(),
       blocked: None,
       email: None,
       email_verified: None,
@@ -90,7 +77,9 @@ impl<AppMetadata, UserMetadata> UserUpdate<AppMetadata, UserMetadata> {
       user_metadata: None,
     }
   }
+}
 
+impl<'a, A: Clone, U: Clone> UserUpdate<'a, A, U> {
   /// ID of the user which can be used when interacting with other APIs.
   pub fn user_id(&mut self, id: &str) -> &mut Self {
     self.user_id = id.to_owned();
@@ -192,29 +181,79 @@ impl<AppMetadata, UserMetadata> UserUpdate<AppMetadata, UserMetadata> {
   }
 
   /// User metadata to which this user has read-only access.
-  pub fn app_metadata(&mut self, app_metadata: AppMetadata) -> &mut Self {
-    self.app_metadata = Some(app_metadata);
-    self
+  pub fn app_metadata<AppMetadata>(
+    &self,
+    app_metadata: AppMetadata,
+  ) -> UserUpdate<'a, AppMetadata, U> {
+    UserUpdate {
+      client: self.client,
+      user_id: self.user_id.clone(),
+      blocked: self.blocked,
+      email: self.email.clone(),
+      email_verified: self.email_verified,
+      phone_number: self.phone_number.clone(),
+      phone_verified: self.phone_verified,
+      given_name: self.given_name.clone(),
+      family_name: self.family_name.clone(),
+      name: self.name.clone(),
+      nickname: self.nickname.clone(),
+      picture: self.picture.clone(),
+      password: self.password.clone(),
+      connection: self.connection.clone(),
+      client_id: self.client_id.clone(),
+      verify_email: self.verify_email,
+      verify_phone_number: self.verify_phone_number,
+      app_metadata: Some(app_metadata),
+      user_metadata: self.user_metadata.clone(),
+    }
   }
 
   /// User metadata to which this user has read/write access.
-  pub fn user_metadata(&mut self, user_metadata: UserMetadata) -> &mut Self {
-    self.user_metadata = Some(user_metadata);
-    self
+  pub fn user_metadata<UserMetadata>(
+    &mut self,
+    user_metadata: UserMetadata,
+  ) -> UserUpdate<'a, A, UserMetadata> {
+    UserUpdate {
+      client: self.client,
+      user_id: self.user_id.clone(),
+      blocked: self.blocked,
+      email: self.email.clone(),
+      email_verified: self.email_verified,
+      phone_number: self.phone_number.clone(),
+      phone_verified: self.phone_verified,
+      given_name: self.given_name.clone(),
+      family_name: self.family_name.clone(),
+      name: self.name.clone(),
+      nickname: self.nickname.clone(),
+      picture: self.picture.clone(),
+      password: self.password.clone(),
+      connection: self.connection.clone(),
+      client_id: self.client_id.clone(),
+      verify_email: self.verify_email,
+      verify_phone_number: self.verify_phone_number,
+      app_metadata: self.app_metadata.clone(),
+      user_metadata: Some(user_metadata),
+    }
   }
 }
 
-impl<
-    AppMetadata: Serialize + DeserializeOwned,
-    UserMetadata: Serialize + DeserializeOwned,
-  > RelativeRequestBuilder for UserUpdate<AppMetadata, UserMetadata>
-{
-  type Response = User<AppMetadata, UserMetadata>;
-
-  fn build<F>(&self, factory: F) -> RequestBuilder
+impl<'a, AIn, UIn> UserUpdate<'a, AIn, UIn> {
+  /// Send
+  pub async fn send<AOut, UOut>(&self) -> Auth0Result<User<AOut, UOut>>
   where
-    F: FnOnce(Method, &str) -> RequestBuilder,
+    AIn: Serialize,
+    UIn: Serialize,
+    AOut: DeserializeOwned,
+    UOut: DeserializeOwned,
   {
-    factory(Method::DELETE, &format!("api/v2/users/{}", self.user_id)).json(self)
+    self
+      .client
+      .send(
+        self
+          .client
+          .begin(Method::PATCH, &format!("api/v2/users/{}", self.user_id))
+          .json(self),
+      )
+      .await
   }
 }
