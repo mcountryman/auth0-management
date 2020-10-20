@@ -1,41 +1,54 @@
 //! Retrieve filtered list of roles that can be assigned to users or groups.
 
-use reqwest::{Method, RequestBuilder};
+use reqwest::Method;
 use serde::Serialize;
 
-use crate::{Page, RelativeRequestBuilder, Role};
+use crate::{Auth0Client, Auth0Result, Page, Role};
 
 /// Retrieve filtered list of roles that can be assigned to users or groups.
 #[derive(Clone, Debug, Serialize)]
-pub struct RolesFind {
+pub struct RolesFind<'a> {
+  #[serde(skip_serializing)]
+  client: &'a Auth0Client,
+
   #[serde(flatten)]
   page: Page,
-  filter: String,
+  filter: Option<String>,
 }
 
-impl RolesFind {
+impl<'a> RolesFind<'a> {
   /// Create find roles request.
-  pub fn new(filter: &str) -> Self {
+  pub fn new(client: &'a Auth0Client) -> Self {
     Self {
+      client,
+
       page: Default::default(),
-      filter: filter.to_owned(),
+      filter: None,
     }
   }
-}
 
-impl AsMut<Page> for RolesFind {
-  fn as_mut(&mut self) -> &mut Page {
-    &mut self.page
+  /// Filter on rule name (case-insensitive).
+  pub fn filter(&mut self, filter: &str) -> &mut Self {
+    self.filter = Some(filter.to_owned());
+    self
+  }
+
+  /// Send request.
+  pub async fn send(&self) -> Auth0Result<Role> {
+    self
+      .client
+      .send::<Role>(
+        self
+          .client //
+          .begin(Method::GET, "api/v2/roles")
+          .query(self),
+      )
+      .await
   }
 }
 
-impl RelativeRequestBuilder for RolesFind {
-  type Response = Vec<Role>;
-
-  fn build<F>(&self, factory: F) -> RequestBuilder
-  where
-    F: FnOnce(Method, &str) -> RequestBuilder,
-  {
-    factory(Method::GET, "/api/v2/roles").query(self)
+impl<'a> AsMut<Page> for RolesFind<'a> {
+  fn as_mut(&mut self) -> &mut Page {
+    &mut self.page
   }
 }

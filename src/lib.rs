@@ -74,6 +74,7 @@ pub use page::*;
 pub use request::*;
 pub use roles::*;
 pub use sort::*;
+pub use types::*;
 pub use users::*;
 
 use crate::client::Auth0Client;
@@ -92,6 +93,7 @@ pub mod rate;
 pub mod roles;
 #[doc(hidden)]
 pub mod token;
+pub mod types;
 pub mod users;
 
 /// Auth0 management client.

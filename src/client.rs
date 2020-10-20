@@ -59,6 +59,14 @@ impl Auth0Client {
     }
   }
 
+  /// Send simple request.
+  pub async fn send_simple<R>(&self, method: Method, path: &str) -> Auth0Result<R>
+  where
+    R: DeserializeOwned,
+  {
+    self.send(self.begin(method, path)).await
+  }
+
   /// Create auth0 request builder.
   /// # Arguments
   /// * `method` = The HTTP request method.
