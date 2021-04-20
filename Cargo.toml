@@ -1,6 +1,10 @@
 [package]
 name = "auth0-management"
+<<<<<<< Updated upstream
 version = "0.0.2"
+=======
+version = "0.1.0"
+>>>>>>> Stashed changes
 authors = ["Marvin Countryman <me@maar.vin>"]
 edition = "2018"
 description = "Auth0 management client API"
@@ -16,12 +20,24 @@ categories = [
 repository = "https://github.com/mcountryman/auth0-management"
 documentation = "https://docs.rs/auth0-management"
 
+[features]
+default = []
+
 [dependencies]
+<<<<<<< Updated upstream
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 reqwest = { version = "0.10", features = ["json"] }
 async-trait = "0.1.41"
 chrono = { version = "0.4.19", features = ["serde"] }
+=======
+serde = { version = "1.0", features = ["derive"] }
+anyhow = { version = "1.0" }
+chrono = { version = "0.4" }
+reqwest = { version = "0.11", features = ["json"] }
+async-trait = "0.1"
+derive_builder = { version = "0.10" }
+>>>>>>> Stashed changes
 
 [dev-dependencies]
-tokio = { version = "0.2.22", features = ["macros"] }
+tokio = { version = "1", features = ["full"] }

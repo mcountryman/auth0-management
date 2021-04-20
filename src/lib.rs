@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 #![warn(missing_docs)]
 //! Unofficial Auth0 Management API
 
@@ -83,6 +84,31 @@ impl Auth0Builder {
   /// Get instance of management client builder.
   pub fn new() -> Self {
     Default::default()
+=======
+#![deny(unsafe_code)]
+
+#[macro_use]
+extern crate serde;
+#[macro_use]
+extern crate async_trait;
+#[macro_use]
+extern crate derive_builder;
+
+pub mod api;
+pub mod driver;
+
+use api::roles::role_create::RoleCreateBuilder;
+use driver::Auth0Driver;
+
+#[derive(Clone)]
+pub struct Auth0ManagementClient<D: Auth0Driver> {
+  driver: D,
+}
+
+impl<D: Auth0Driver> Auth0ManagementClient<D> {
+  pub fn create_role(&self) -> RoleCreateBuilder<D> {
+    RoleCreateBuilder::new(self.driver.clone())
+>>>>>>> Stashed changes
   }
 
   /// Get instance of management client.
