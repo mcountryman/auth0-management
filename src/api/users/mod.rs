@@ -27,9 +27,9 @@
 pub mod user;
 pub mod user_create;
 pub mod user_delete;
-// pub mod user_enrollments_get;
-// pub mod user_get;
-// pub mod user_logs_get;
+pub mod user_enrollments_get;
+pub mod user_get;
+pub mod user_logs_get;
 // pub mod user_update;
 // pub mod users_find;
 

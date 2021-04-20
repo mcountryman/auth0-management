@@ -1,11 +1,7 @@
 //! Retrieve log events for a specific user.
 use chrono::{DateTime, Utc};
-use reqwest::{Method, RequestBuilder};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-
-use crate::{Auth0Client, Auth0RequestBuilder};
-use crate::{Page, Sort};
 
 /// User log event.
 #[derive(Debug, Deserialize)]
@@ -92,41 +88,13 @@ pub struct UserLogsGet<'a> {
   sort: Sort,
 }
 
-impl<'a> UserLogsGet<'a> {
-  /// Create [GetUserLogs] request.
-  pub fn new<S: AsRef<str>>(client: &'a Auth0Client, id: S) -> Self {
-    Self {
-      client,
-
-      id: id.as_ref().to_string(),
-      page: Default::default(),
-      sort: Default::default(),
-    }
+impl_request!(
+  UserLogsGet,
+  UserLogsGetBuilder,
+  Vec<UserLog>,
+  |req, driver| {
+    driver
+      .build(Method::GET, &format!("api/v2/users/{}/logs", self.id))
+      .query(&req)
   }
-}
-
-impl<'a> AsMut<Page> for UserLogsGet<'a> {
-  fn as_mut(&mut self) -> &mut Page {
-    &mut self.page
-  }
-}
-
-impl<'a> AsMut<Sort> for UserLogsGet<'a> {
-  fn as_mut(&mut self) -> &mut Sort {
-    &mut self.sort
-  }
-}
-
-impl<'a> AsRef<Auth0Client> for UserLogsGet<'a> {
-  fn as_ref(&self) -> &Auth0Client {
-    self.client
-  }
-}
-
-impl<'a> Auth0RequestBuilder for UserLogsGet<'a> {
-  fn build(&self, client: &Auth0Client) -> RequestBuilder {
-    client
-      .begin(Method::GET, &format!("api/v2/users/{}/logs", self.id))
-      .query(&self)
-  }
-}
+);

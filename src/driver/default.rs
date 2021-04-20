@@ -1,5 +1,4 @@
 use reqwest::{Client, Error, Method, RequestBuilder};
-use serde::de::DeserializeOwned;
 
 use super::Auth0Driver;
 
