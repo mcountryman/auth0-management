@@ -85,7 +85,7 @@ impl UsersManager {
   /// # Scopes
   /// * `read:users`
   /// * `read:user_idp_tokens`
-  pub async fn get<A, U, S: AsRef<str>>(&self, id: S) -> Result<User<A, U>, Auth0Error>
+  pub async fn get<S: AsRef<str>>(&self, id: S) -> Result<User<A, U>, Auth0Error>
   where
     A: DeserializeOwned + Send + Sync,
     U: DeserializeOwned + Send + Sync,

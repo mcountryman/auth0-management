@@ -1,28 +1,33 @@
 [package]
 name = "auth0-management"
-version = "0.0.4"
+version = "0.1.0"
 authors = ["Marvin Countryman <me@maar.vin>"]
-edition = "2018"
+edition = "2021"
 description = "An unofficial client for Auth0 Management API."
 
 readme = "./README.md"
 license = "MIT"
 keywords = ["auth0", "reqwest", "management", "api"]
-categories = [
-  "api-bindings",
-  "asynchronous",
-  "authentication"
-]
+categories = ["api-bindings", "asynchronous", "authentication"]
 repository = "https://github.com/mcountryman/auth0-management"
 documentation = "https://docs.rs/auth0-management"
 
 [dependencies]
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
-reqwest = { version = "0.10", features = ["json"] }
-async-trait = "0.1"
-chrono = { version = "0.4", features = ["serde"] }
-async-mutex = "1.4"
+# json
+serde = { version = "1.0.136", features = ["derive"] }
+serde_json = "1.0.79"
+
+# time
+chrono = { version = "0.4.19", features = ["serde"] }
+
+# http
+url = "2.2.2"
+reqwest = { version = "0.11.10", features = ["json"] }
+
+# utilities
+thiserror = "1.0.30"
+async-trait = "0.1.52"
+derive_builder = "0.11.0"
 
 [dev-dependencies]
-tokio = { version = "0.2.22", features = ["macros"] }
+tokio = { version = "1.17.0", features = ["macros"] }

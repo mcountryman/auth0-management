@@ -1,70 +1,27 @@
-//! Error type for auth0 requests.
-use serde_json::Error as JsonError;
-use std::error::Error;
-use std::fmt::{Display, Formatter};
+//! Auth0 errors.
 
-use crate::rate::RateLimitError;
-use crate::token::TokenError;
-use serde::Deserialize;
+use crate::http::HttpRequestBuilderError;
+use crate::entities::users::UserCreateBuilderError;
+use thiserror::Error;
 
-/// Auth0 result type
+/// An Auth0 management result;
 pub type Auth0Result<T> = Result<T, Auth0Error>;
 
-/// The error returned when querying Auth0.
-#[derive(Debug)]
+/// An Auth0 management client error.
+#[derive(Error, Debug)]
 pub enum Auth0Error {
-  /// Json error
-  Json(JsonError),
-  /// Generic http error.
-  Http(reqwest::Error),
-  /// Authentication token error.
-  Token(TokenError),
-  /// Auth0 server side error.
-  Auth0(String),
-  /// Auth0 rate limit error.
-  RateLimit(RateLimitError),
-}
+  /// A url parsing error.
+  #[error(transparent)]
+  Url(#[from] url::ParseError),
+  /// A reqwest error.
+  #[error(transparent)]
+  Reqwest(#[from] reqwest::Error),
 
-impl Display for Auth0Error {
-  fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-    write!(f, "{:?}", self)
-  }
-}
+  /// A [HttpRequestBuilder] error.
+  #[error(transparent)]
+  HttpRequestBuilder(#[from] HttpRequestBuilderError),
 
-impl Error for Auth0Error {}
-
-impl From<JsonError> for Auth0Error {
-  fn from(err: JsonError) -> Self {
-    Auth0Error::Json(err)
-  }
-}
-
-impl From<TokenError> for Auth0Error {
-  fn from(inner: TokenError) -> Self {
-    Auth0Error::Token(inner)
-  }
-}
-
-impl From<reqwest::Error> for Auth0Error {
-  fn from(inner: reqwest::Error) -> Self {
-    Auth0Error::Http(inner)
-  }
-}
-
-impl From<RateLimitError> for Auth0Error {
-  fn from(inner: RateLimitError) -> Self {
-    Auth0Error::RateLimit(inner)
-  }
-}
-
-/// Auth0 error response.
-#[derive(Deserialize)]
-pub struct Auth0ErrorResponse {
-  message: Option<String>,
-}
-
-impl From<Auth0ErrorResponse> for Auth0Error {
-  fn from(inner: Auth0ErrorResponse) -> Self {
-    Auth0Error::Auth0(inner.message.unwrap_or_else(|| "".to_owned()))
-  }
+  /// A [UserCreateBuilder] error.
+  #[error(transparent)]
+  UserCreateBuilder(#[from] UserCreateBuilderError),
 }
