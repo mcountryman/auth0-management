@@ -3,27 +3,22 @@
 #![deny(missing_docs)]
 
 use error::Auth0Result;
-use http::HttpRequest;
-use std::sync::Arc;
+use reqwest_middleware::{ClientWithMiddleware, RequestBuilder};
+use url::Url;
 
 pub mod entities;
 pub mod error;
 pub mod http;
 
 /// An Auth0 management client.
-pub struct Auth0 {}
+pub struct Auth0 {
+  url: Url,
+  client: ClientWithMiddleware,
+}
 
-/// An Auth0 request.
-#[async_trait::async_trait]
-pub trait Auth0Request<Client>: Sized {
-  /// The request body type.
-  type Body;
-  /// The response type.
-  type Response;
-
-  /// Gets the request [Client].
-  fn client(&self) -> Auth0Result<Arc<Client>>;
-
-  /// Attempts to get a [HttpRequest].
-  fn to_request(&self) -> Auth0Result<HttpRequest<Self::Body>>;
+impl Auth0 {
+  pub(crate) fn post(&self, path: impl AsRef<str>) -> Auth0Result<RequestBuilder> {
+    let url = self.url.join(path.as_ref())?;
+    Ok(self.client.post(url))
+  }
 }
