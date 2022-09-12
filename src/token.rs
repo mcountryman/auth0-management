@@ -1,11 +1,11 @@
 use std::error::Error;
+use std::fmt::Formatter;
 use std::ops::Deref;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{Duration, SystemTime, SystemTimeError};
 
 use async_mutex::Mutex;
 use reqwest::{Client, StatusCode};
-use serde::export::Formatter;
 use serde::{Deserialize, Serialize};
 
 /// Auth0 OAuth token.
@@ -37,7 +37,6 @@ struct TokenOpts {
 #[derive(Deserialize, Clone, Debug)]
 struct TokenErrorResponse {
   error: String,
-  error_description: String,
 }
 
 /// Provides oauth token retrieval and expiration checks.
@@ -130,7 +129,7 @@ impl std::fmt::Display for TokenError {
 
 impl From<TokenErrorResponse> for TokenError {
   fn from(res: TokenErrorResponse) -> TokenError {
-    TokenError::AccessDenied(res.error_description)
+    TokenError::AccessDenied(res.error)
   }
 }
 

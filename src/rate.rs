@@ -1,11 +1,10 @@
 use std::error::Error;
+use std::fmt::{Display, Formatter};
 use std::num::ParseIntError;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use reqwest::header::ToStrError;
 use reqwest::Response;
-use serde::export::fmt::Display;
-use serde::export::Formatter;
 use std::sync::atomic::{AtomicU32, AtomicU64, Ordering};
 
 /// Provides ability to read rate limit headers and check if limits are exceeded.
