@@ -1,7 +1,7 @@
 on:
   push:
     ignore-branches:
-      - 'master'
+      - 'main'
   pull_request:
     branches:
       - '*'
@@ -110,6 +110,6 @@ jobs:
 #    steps:
 #      - name: Coveralls finalization
 #        uses: coverallsapp/github-action@master
-#        with:
+#        with:gs
 #          github-token: ${{ secrets.GITHUB_TOKEN }}
 #          parallel-finished: true
