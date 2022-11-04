@@ -26,7 +26,7 @@
 //    .expect("Failed to create a user.");
 
 //  // Trigger password rest
-//  let _reset_password = auth0
+//  let reset_password: Result<String, Auth0Error> = auth0
 //     .users
 //     .reset_password(&user.email , "Username-Password-Authentication", env::var("AUTH0_CLIENT_ID"))
 //     .await

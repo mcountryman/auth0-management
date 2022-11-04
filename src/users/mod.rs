@@ -70,7 +70,7 @@ impl UsersManager {
     email: &str,
     connection: &str,
     client_id: &str,
-  ) -> Auth0Result<()> {
+  ) -> Auth0Result<String> {
     UserResetPassword::new(email, connection, client_id)
       .send_to(&self.0)
       .await
