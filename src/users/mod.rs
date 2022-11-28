@@ -114,6 +114,21 @@ impl UsersManager {
     UserGet::new(id).send_to(&self.0).await
   }
 
+  /// Retrieve user details. A list of fields to include or exclude may also be specified.
+  ///
+  /// # Arguments
+  /// * `email` - The email of the user to retrieve.
+  /// # Scopes
+  /// * `read:users`
+  /// * `read:user_idp_tokens`
+  pub async fn get_by_email<A, U>(&self, email: &str) -> Result<Vec<User<A, U>>, Auth0Error>
+  where
+    A: DeserializeOwned + Send + Sync,
+    U: DeserializeOwned + Send + Sync,
+  {
+    GetUserByEmail::new(email).send_to(&self.0).await
+  }
+
   /// Retrieve log events for a specific user.
   ///
   /// Note: For more information on all possible event types, their respective acronyms
