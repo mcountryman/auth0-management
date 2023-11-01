@@ -14,8 +14,16 @@ pub struct UsersFind<'a> {
 
   #[serde(flatten)]
   page: Page,
-  #[serde(skip_serializing_if = "Sort::is_emtpy")]
+  #[serde(skip_serializing_if = "Sort::is_empty")]
   sort: Sort,
+
+  /// Query in Lucene query string syntax. S
+  /// ome query types cannot be used on metadata fields, for details see Searchable Fields.
+  #[serde(skip_serializing_if = "Option::is_none")]
+  q: Option<String>,
+
+  #[serde(skip_serializing_if = "String::is_empty")]
+  search_engine: String,
 }
 
 impl<'a> UsersFind<'a> {
@@ -26,7 +34,16 @@ impl<'a> UsersFind<'a> {
 
       page: Default::default(),
       sort: Default::default(),
+      q: None,
+      search_engine: "v3".to_string(),
     }
+  }
+
+  /// Query in Lucene query string syntax.
+  /// Some query types cannot be used on metadata fields, for details see Searchable Fields.
+  pub fn lucene_query(&mut self, q: &str) -> &mut Self {
+    self.q = Some(q.to_owned());
+    self
   }
 }
 

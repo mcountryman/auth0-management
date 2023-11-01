@@ -23,7 +23,7 @@ impl Sort {
   }
 
   /// Determines if sort is empty.
-  pub fn is_emtpy(&self) -> bool {
+  pub fn is_empty(&self) -> bool {
     self.field.is_none() || self.order.is_none()
   }
 }

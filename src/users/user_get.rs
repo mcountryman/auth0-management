@@ -42,7 +42,7 @@ impl GetUserByEmail {
 impl Auth0RequestBuilder for GetUserByEmail {
   fn build(&self, client: &Auth0Client) -> RequestBuilder {
     client
-      .begin(Method::GET, "api/v2/users/users-by-email")
+      .begin(Method::GET, "api/v2/users-by-email")
       .query(&[("email", self.email.to_owned())])
   }
 }

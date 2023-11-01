@@ -20,6 +20,7 @@ pub use user_update::*;
 #[doc(inline)]
 pub use users_find::*;
 
+use crate::user_reset_password::UserResetPassword;
 use crate::{Auth0Client, Auth0Error, Auth0RequestSimple, Auth0Result};
 use serde::de::DeserializeOwned;
 use std::sync::Arc;
@@ -31,6 +32,7 @@ pub mod user_delete;
 pub mod user_enrollments_get;
 pub mod user_get;
 pub mod user_logs_get;
+pub mod user_reset_password;
 pub mod user_update;
 pub mod users_find;
 
@@ -53,6 +55,25 @@ impl UsersManager {
   /// * `create:users`
   pub fn create(&self) -> UserCreate<'_, (), ()> {
     UserCreate::new(&self.0)
+  }
+
+  /// Trigger a password reset for a given user.
+  ///
+  /// # Arguments
+  /// * `email` - The email of the user to reset the password.
+  /// * `connection` - The database connection required for the user.
+  /// * `client_id` - The auth0 client id.
+  /// # Scopes
+  /// * `create:users`
+  pub async fn reset_password(
+    &self,
+    email: &str,
+    connection: &str,
+    client_id: &str,
+  ) -> Auth0Result<String> {
+    UserResetPassword::new(email, connection, client_id)
+      .send_to(&self.0)
+      .await
   }
 
   /// Delete a user.
@@ -91,6 +112,24 @@ impl UsersManager {
     U: DeserializeOwned + Send + Sync,
   {
     UserGet::new(id).send_to(&self.0).await
+  }
+
+  /// Retrieve user details. A list of fields to include or exclude may also be specified.
+  ///
+  /// # Arguments
+  /// * `email` - The email of the user to retrieve.
+  /// # Scopes
+  /// * `read:users`
+  /// * `read:user_idp_tokens`
+  pub async fn get_by_email<A, U>(
+    &self,
+    email: &str,
+  ) -> Result<Vec<User<A, U>>, Auth0Error>
+  where
+    A: DeserializeOwned + Send + Sync,
+    U: DeserializeOwned + Send + Sync,
+  {
+    GetUserByEmail::new(email).send_to(&self.0).await
   }
 
   /// Retrieve log events for a specific user.

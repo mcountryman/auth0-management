@@ -88,7 +88,7 @@ pub struct UserLogsGet<'a> {
   id: String,
   #[serde(flatten)]
   page: Page,
-  #[serde(skip_serializing_if = "Sort::is_emtpy")]
+  #[serde(skip_serializing_if = "Sort::is_empty")]
   sort: Sort,
 }
 
